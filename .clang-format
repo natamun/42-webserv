@@ -1,0 +1,51 @@
+---
+Language: Cpp
+# Based on Google C++ Style Guide
+BasedOnStyle: Google
+
+# C++98 compatibility: keep "> >" instead of ">>" in nested templates
+Standard: Cpp03
+
+# Use 4 spaces for indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+# Match the 42 header width
+ColumnLimit: 80
+
+# Attach pointer to type (int* ptr) instead of name (int *ptr)
+# Most common convention in C++
+PointerAlignment: Left
+
+# Disable vertical alignment of variables (no more Norminette-style columns)
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+
+# Allow at most one consecutive empty line
+MaxEmptyLinesToKeep: 1
+
+# Sort #include directives alphabetically
+SortIncludes: true
+
+# Place opening brace on a new line (Allman style)
+BreakBeforeBraces: Allman
+
+# Space after the template keyword
+SpaceAfterTemplateKeyword: true
+
+# Allow short inline functions on a single line
+AllowShortFunctionsOnASingleLine: Inline
+
+# Never merge if body onto the same line as the if statement
+AllowShortIfStatementsOnASingleLine: Never
+
+# Never merge for/while body onto the same line as the loop
+AllowShortLoopsOnASingleLine: false
+
+# No indentation before public/private/protected
+AccessModifierOffset: -4
+
+# One parameter per line when they don't fit on a single line
+BinPackParameters: false
+BinPackArguments: false
