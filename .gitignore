@@ -1,2 +1,4 @@
 *.o
 webserv
+webserv_test
+.vscode/
