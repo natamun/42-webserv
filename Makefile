@@ -2,13 +2,18 @@ NAME		= webserv
 CXX			= c++
 CXXFLAGS	= -Wall -Wextra -Werror -std=c++98
 
-HEADER_DIR 	= headers
+HEADER_DIR 	= includes
 SRCS_DIR	= srcs
 OBJ_DIR		= obj
 
-SRCS_FILES	= main.cpp
+SRCS_FILES	= main.cpp \
+			  WebServer.cpp
 SRCS		= $(addprefix $(SRCS_DIR)/, $(SRCS_FILES))
 OBJ			= $(addprefix $(OBJ_DIR)/, $(SRCS_FILES:.cpp=.o))
+
+TEST_NAME		= webserv_test
+SRC_NO_MAIN		= $(filter-out $(SRCS_DIR)/main.cpp, $(SRCS))
+
 CXXFLAGS 	+= -I $(HEADER_DIR)
 
 G = \033[0;32m
@@ -36,7 +41,7 @@ clean:
 
 fclean: clean
 	@echo "$(Y)Removing $(NAME)...$(RES)"
-	@rm -f $(NAME)
+	@rm -f $(NAME) $(TEST_NAME)
 	@echo "$(G)Cleanup complete.$(RES)"
 
 debug: CXXFLAGS += -g
@@ -44,4 +49,11 @@ debug: re
 
 re: fclean all
 
-.PHONY: all clean fclean re debug
+# Usage: make test FILE=test_name
+test:
+	@echo "$(Y)--- Compiling test: $(FILE) ---$(RES)"
+	@$(CXX) $(CXXFLAGS) $(SRC_NO_MAIN) $(FILE) -o $(TEST_NAME)
+	@echo "$(G)✅ $(TEST_NAME) created!$(RES)"
+	@./$(TEST_NAME)
+
+.PHONY: all clean fclean re debug test
