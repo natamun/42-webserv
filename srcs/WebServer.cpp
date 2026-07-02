@@ -13,6 +13,7 @@
 #include "WebServer.hpp"
 
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -55,6 +56,13 @@ WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
             _closeSockets();
             throw WebServerException(
                 "listen", _servers[i].host, _servers[i].port);
+        }
+
+        if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
+        {
+            close(fd);
+            _closeSockets();
+            throw WebServerException("fcntl", _servers[i].host, _servers[i].port);
         }
 
         _sockets.push_back(fd);
