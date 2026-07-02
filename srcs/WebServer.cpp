@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/02 04:21:59 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/02 17:18:18 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,8 @@ WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
         {
             close(fd);
             _closeSockets();
-            throw WebServerException("fcntl", _servers[i].host, _servers[i].port);
+            throw WebServerException(
+                "fcntl", _servers[i].host, _servers[i].port);
         }
 
         _sockets.push_back(fd);
@@ -74,7 +75,26 @@ WebServer::~WebServer()
     _closeSockets();
 }
 
-void WebServer::run() {}
+void WebServer::run()
+{
+    _initPollFds();
+
+    while (true)
+    {
+        int ready = poll(&_pollfds[0], _pollfds.size(), -1);
+        if (ready == -1)
+            throw WebServerException("poll() failed");
+
+        for (size_t i = 0; i < _pollfds.size(); ++i)
+        {
+            if (!(_pollfds[i].revents & POLLIN))
+                continue;
+
+            if (_isListeningSocket(_pollfds[i].fd))
+                _acceptClient(_pollfds[i].fd);
+        }
+    }
+}
 
 std::vector<Server> const& WebServer::getServers() const
 {
@@ -132,4 +152,43 @@ void WebServer::_closeSockets()
     for (size_t i = 0; i < _sockets.size(); ++i)
         close(_sockets[i]);
     _sockets.clear();
+}
+
+void WebServer::_initPollFds()
+{
+    for (size_t i = 0; i < _sockets.size(); ++i)
+    {
+        struct pollfd pfd;
+        pfd.fd = _sockets[i];
+        pfd.events = POLLIN;
+        pfd.revents = 0;
+        _pollfds.push_back(pfd);
+    }
+}
+
+bool WebServer::_isListeningSocket(int fd) const
+{
+    for (size_t i = 0; i < _sockets.size(); ++i)
+        if (_sockets[i] == fd)
+            return true;
+    return false;
+}
+
+void WebServer::_acceptClient(int listening_fd)
+{
+    int client_fd = accept(listening_fd, NULL, NULL);
+    if (client_fd == -1)
+        throw WebServerException("accept() failed");
+
+    if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
+    {
+        close(client_fd);
+        throw WebServerException("fcntl() failed on client fd");
+    }
+
+    struct pollfd pfd;
+    pfd.fd = client_fd;
+    pfd.events = POLLIN;
+    pfd.revents = 0;
+    _pollfds.push_back(pfd);
 }
