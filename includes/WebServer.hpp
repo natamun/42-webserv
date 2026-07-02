@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/02 02:37:02 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/02 03:55:49 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,11 +26,13 @@ public:
     void run();
 
 private:
-    std::vector<Server> config;
-    std::vector<int> sockets;
-
     WebServer(WebServer const& other);
     WebServer& operator=(WebServer const& other);
+
+    void _closeSockets();
+
+    std::vector<Server> _servers;
+    std::vector<int> _sockets;
 };
 
 #endif
