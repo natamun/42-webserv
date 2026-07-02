@@ -6,7 +6,8 @@ HEADER_DIR 	= includes
 SRCS_DIR	= srcs
 OBJ_DIR		= obj
 
-SRCS_FILES	= main.cpp
+SRCS_FILES	= main.cpp \
+			  WebServer.cpp
 SRCS		= $(addprefix $(SRCS_DIR)/, $(SRCS_FILES))
 OBJ			= $(addprefix $(OBJ_DIR)/, $(SRCS_FILES:.cpp=.o))
 
