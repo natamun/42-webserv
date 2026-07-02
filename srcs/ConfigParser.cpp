@@ -18,6 +18,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <vector>
+#include <cstdlib>
 
 ConfigParser::ConfigParser(std::string const& filepath) : _pos(0)
 {
