@@ -2,7 +2,7 @@ NAME		= webserv
 CXX			= c++
 CXXFLAGS	= -Wall -Wextra -Werror -std=c++98
 
-HEADER_DIR 	= headers
+HEADER_DIR 	= includes
 SRCS_DIR	= srcs
 OBJ_DIR		= obj
 
