@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/02 19:55:43 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/02 20:07:40 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,6 +125,10 @@ std::ostream& operator<<(std::ostream& os, WebServer const& ws)
         os << "[server " << i << "] " << s.host << ":" << s.port
            << " (fd=" << sockets[i] << ")\n";
 
+        os << "  server_name:          "
+           << (s.server_name.empty() ? "-" : s.server_name) << "\n";
+        os << "  root:                 " << (s.root.empty() ? "-" : s.root)
+           << "\n";
         os << "  client_max_body_size: " << s.client_max_body_size << "\n";
 
         os << "  error_pages:\n";

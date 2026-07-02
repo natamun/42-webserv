@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:52:32 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/02 04:25:37 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/02 20:07:38 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,8 @@ int main(void)
 
     Server srv;
     srv.host = "127.0.0.1";
+    srv.server_name = "localhost";
+    srv.root = "./www";
     srv.port = 8080;
     srv.client_max_body_size = 1048576;
     srv.error_pages[404] = "./www/errors/404.html";
