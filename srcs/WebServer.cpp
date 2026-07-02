@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/02 19:40:48 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/02 19:55:43 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -224,7 +224,10 @@ void WebServer::_readClient(int client_fd)
     {
         _requests[client_fd].append(buf, n);
         if (_requests[client_fd].find("\r\n\r\n") != std::string::npos)
-            // Http parser TODO, right now we just print it
-            std::cout << "[fd=" << client_fd << "] request complete\n";
+        {
+            // We will call HTTP parser but right not we just print the content
+            std::cout << "[fd=" << client_fd << "] request complete:\n";
+            std::cout << _requests[client_fd] << std::endl;
+        }
     }
 }
