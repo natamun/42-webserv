@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/02 19:08:38 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/02 19:40:54 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 #include <poll.h>
 
+#include <map>
 #include <ostream>
 #include <vector>
 
@@ -44,6 +45,7 @@ private:
     std::vector<Server> _servers;
     std::vector<int> _sockets;
     std::vector<struct pollfd> _pollfds;
+    std::map<int, std::string> _requests;
 };
 
 std::ostream& operator<<(std::ostream& os, WebServer const& ws);

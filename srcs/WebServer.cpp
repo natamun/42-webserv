@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/02 19:09:23 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/02 19:40:48 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,6 +92,13 @@ void WebServer::run()
 
             if (_isListeningSocket(_pollfds[i].fd))
                 _acceptClient(_pollfds[i].fd);
+            else
+            {
+                size_t prev_size = _pollfds.size();
+                _readClient(_pollfds[i].fd);
+                if (_pollfds.size() < prev_size)
+                    --i;
+            }
         }
     }
 }
@@ -191,4 +198,33 @@ void WebServer::_acceptClient(int listening_fd)
     pfd.events = POLLIN;
     pfd.revents = 0;
     _pollfds.push_back(pfd);
+}
+
+void WebServer::_readClient(int client_fd)
+{
+    char buf[4096];
+
+    ssize_t n = recv(client_fd, buf, sizeof(buf), 0);
+
+    if (n <= 0)
+    {
+        close(client_fd);
+        _requests.erase(client_fd);
+        for (size_t i = 0; i < _pollfds.size(); ++i)
+        {
+            if (_pollfds[i].fd == client_fd)
+            {
+                _pollfds.erase(_pollfds.begin() + i);
+                break;
+            }
+        }
+        return;
+    }
+    if (n > 0)
+    {
+        _requests[client_fd].append(buf, n);
+        if (_requests[client_fd].find("\r\n\r\n") != std::string::npos)
+            // Http parser TODO, right now we just print it
+            std::cout << "[fd=" << client_fd << "] request complete\n";
+    }
 }
