@@ -15,6 +15,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #include <cstring>
 
@@ -26,8 +27,10 @@ WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
     {
         int fd = socket(AF_INET, SOCK_STREAM, 0);
         if (fd == -1)
-            throw WebServerException(
-                "socket", _servers[i].host, _servers[i].port);
+        {
+            _closeSockets();
+            throw WebServerException("socket", _servers[i].host, _servers[i].port);
+        }
 
         struct sockaddr_in addr;
         std::memset(&addr, 0, sizeof(addr));
@@ -36,19 +39,35 @@ WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
         addr.sin_addr.s_addr = inet_addr(_servers[i].host.c_str());
 
         if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1)
-            throw WebServerException(
-                "bind", _servers[i].host, _servers[i].port);
+        {
+            close(fd);
+            _closeSockets();
+            throw WebServerException("bind", _servers[i].host, _servers[i].port);
+        }
 
         if (listen(fd, SOMAXCONN) == -1)
-            throw WebServerException(
-                "listen", _servers[i].host, _servers[i].port);
+        {
+            close(fd);
+            _closeSockets();
+            throw WebServerException("listen", _servers[i].host, _servers[i].port);
+        }
 
         _sockets.push_back(fd);
     }
 }
 
-WebServer::~WebServer() {}
+WebServer::~WebServer()
+{
+    _closeSockets();
+}
 
-void WebServer::run() {}
+void WebServer::run()
+{
+}
 
-void WebServer::_closeSockets() {}
+void WebServer::_closeSockets()
+{
+    for (size_t i = 0; i < _sockets.size(); ++i)
+        close(_sockets[i]);
+    _sockets.clear();
+}
