@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/02 17:18:18 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/02 19:09:23 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -166,10 +166,10 @@ void WebServer::_initPollFds()
     }
 }
 
-bool WebServer::_isListeningSocket(int fd) const
+bool WebServer::_isListeningSocket(int listening_fd) const
 {
     for (size_t i = 0; i < _sockets.size(); ++i)
-        if (_sockets[i] == fd)
+        if (_sockets[i] == listening_fd)
             return true;
     return false;
 }
