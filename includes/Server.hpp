@@ -23,6 +23,8 @@ class Server
 {
 public:
     std::string host;
+    std::string server_name;
+    std::string root;
     int port;
     int client_max_body_size;
     std::map<int, std::string> error_pages;
