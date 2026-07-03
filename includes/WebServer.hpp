@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 00:33:02 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 00:51:04 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,8 @@ private:
     void _closeSockets();
     void _closeClients();
     void _removeClient(int client_fd);
+    void _addPollFd(int fd, short events);
+    void _setPollEvent(int fd, short events);
     void _initPollFds();
     bool _isListeningSocket(int listening_fd) const;
     void _acceptClient(int listening_fd);

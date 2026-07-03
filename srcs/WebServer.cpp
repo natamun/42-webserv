@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 00:44:39 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 00:50:56 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,16 +151,31 @@ void WebServer::_removeClient(int client_fd)
     }
 }
 
+void WebServer::_addPollFd(int fd, short events)
+{
+    struct pollfd pfd;
+    pfd.fd = fd;
+    pfd.events = events;
+    pfd.revents = 0;
+    _pollfds.push_back(pfd);
+}
+
+void WebServer::_setPollEvent(int fd, short events)
+{
+    for (size_t i = 0; i < _pollfds.size(); ++i)
+    {
+        if (_pollfds[i].fd == fd)
+        {
+            _pollfds[i].events = events;
+            break;
+        }
+    }
+}
+
 void WebServer::_initPollFds()
 {
     for (size_t i = 0; i < _sockets.size(); ++i)
-    {
-        struct pollfd pfd;
-        pfd.fd = _sockets[i];
-        pfd.events = POLLIN;
-        pfd.revents = 0;
-        _pollfds.push_back(pfd);
-    }
+        _addPollFd(_sockets[i], POLLIN);
 }
 
 bool WebServer::_isListeningSocket(int listening_fd) const
@@ -191,11 +206,7 @@ void WebServer::_acceptClient(int listening_fd)
         throw WebServerException("fcntl() failed on client fd");
     }
 
-    struct pollfd pfd;
-    pfd.fd = client_fd;
-    pfd.events = POLLIN;
-    pfd.revents = 0;
-    _pollfds.push_back(pfd);
+    _addPollFd(client_fd, POLLIN);
 }
 
 void WebServer::_readClient(int client_fd)
@@ -225,14 +236,7 @@ void WebServer::_readClient(int client_fd)
                 "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: "
                 "close\r\n\r\n");
 
-            for (size_t i = 0; i < _pollfds.size(); ++i)
-            {
-                if (_pollfds[i].fd == client_fd)
-                {
-                    _pollfds[i].events = POLLOUT;
-                    break;
-                }
-            }
+            _setPollEvent(client_fd, POLLOUT);
         }
     }
 }
