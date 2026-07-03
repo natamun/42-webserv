@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/03 23:30:00 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 00:33:02 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <ostream>
 #include <vector>
 
+#include "Client.hpp"
 #include "Server.hpp"
 
 class WebServer
@@ -46,8 +47,7 @@ private:
     std::vector<Server> _servers;
     std::vector<int> _sockets;
     std::vector<struct pollfd> _pollfds;
-    std::map<int, std::string> _requests;
-    std::map<int, std::string> _responses;
+    std::map<int, Client*> _clients;
 };
 
 std::ostream& operator<<(std::ostream& os, WebServer const& ws);

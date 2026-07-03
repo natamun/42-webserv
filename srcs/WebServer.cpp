@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/03 23:58:43 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 00:32:58 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,11 @@ WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
 WebServer::~WebServer()
 {
     _closeSockets();
+
+    std::map<int, Client*>::iterator it;
+    for (it = _clients.begin(); it != _clients.end(); ++it)
+        delete it->second;
+    _clients.clear();
 }
 
 void WebServer::run()
@@ -155,10 +160,11 @@ void WebServer::_acceptClient(int listening_fd)
     if (client_fd == -1)
         throw WebServerException("accept() failed");
 
-    // Right now i just print the client adress, we will stock it on log later
-    std::cout << "[fd=" << client_fd << "] new connection from "
-              << inet_ntoa(client_addr.sin_addr) << ":"
-              << ntohs(client_addr.sin_port) << std::endl;
+    Client* client = new Client(client_fd,
+                                inet_ntoa(client_addr.sin_addr),
+                                ntohs(client_addr.sin_port));
+    _clients[client_fd] = client;
+    std::cout << *client << std::endl;
 
     if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
     {
@@ -182,7 +188,8 @@ void WebServer::_readClient(int client_fd)
     if (n <= 0)
     {
         close(client_fd);
-        _requests.erase(client_fd);
+        delete _clients[client_fd];
+        _clients.erase(client_fd);
         for (size_t i = 0; i < _pollfds.size(); ++i)
         {
             if (_pollfds[i].fd == client_fd)
@@ -195,17 +202,18 @@ void WebServer::_readClient(int client_fd)
     }
     if (n > 0)
     {
-        _requests[client_fd].append(buf, n);
-        if (_requests[client_fd].find("\r\n\r\n") != std::string::npos)
+        _clients[client_fd]->appendRequest(buf, n);
+        if (_clients[client_fd]->getRequest().find("\r\n\r\n") !=
+            std::string::npos)
         {
-            // We will call HTTP parser but right not we just print the content
+            // We will call HTTP parser but right now we just print the content
             std::cout << "[fd=" << client_fd << "] request complete:\n";
-            std::cout << _requests[client_fd] << std::endl;
+            std::cout << _clients[client_fd]->getRequest() << std::endl;
 
             // Hardcoded response, will be replaced by HTTP response builder
-            _responses[client_fd] =
+            _clients[client_fd]->setResponse(
                 "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: "
-                "close\r\n\r\n";
+                "close\r\n\r\n");
 
             for (size_t i = 0; i < _pollfds.size(); ++i)
             {
@@ -221,12 +229,12 @@ void WebServer::_readClient(int client_fd)
 
 void WebServer::_sendResponse(int client_fd)
 {
-    std::string const& response = _responses[client_fd];
+    std::string const& response = _clients[client_fd]->getResponse();
     send(client_fd, response.c_str(), response.size(), 0);
 
     close(client_fd);
-    _requests.erase(client_fd);
-    _responses.erase(client_fd);
+    delete _clients[client_fd];
+    _clients.erase(client_fd);
     for (size_t i = 0; i < _pollfds.size(); ++i)
     {
         if (_pollfds[i].fd == client_fd)
