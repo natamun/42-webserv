@@ -1,16 +1,24 @@
-name: Build check
+name: CI Pipeline
 
 on:
   pull_request:
     branches: ["main"]
 
 jobs:
-  build:
+  format-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Check code format (clang-format)
+      - uses: actions/checkout@v4
+      - name: Check code format
         run: find . -name "*.cpp" -o -name "*.hpp" | xargs clang-format --dry-run --Werror
+
+  build:
+    needs: format-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - name: Compile with make
         run: make
+          
+    
+        
