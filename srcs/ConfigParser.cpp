@@ -78,7 +78,7 @@ std::string const& ConfigParser::_peek() const
 std::string ConfigParser::_next()
 {
     if (_isEnd())
-        throw std::runtime_error("unexpeted end of config file");
+        throw std::runtime_error("unexpected end of config file");
     return _tokens[_pos++];
 }
 
