@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 01:14:30 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 01:21:26 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,10 +102,8 @@ void WebServer::run()
             }
             else if (_pollfds[i].revents & POLLOUT)
             {
-                size_t prev_size = _pollfds.size();
                 _sendResponse(_pollfds[i].fd);
-                if (_pollfds.size() < prev_size)
-                    --i;
+                --i;
             }
         }
     }
