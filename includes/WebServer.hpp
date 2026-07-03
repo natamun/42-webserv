@@ -38,6 +38,8 @@ private:
     WebServer& operator=(WebServer const& other);
 
     void _closeSockets();
+    void _closeClients();
+    void _removeClient(int client_fd);
     void _initPollFds();
     bool _isListeningSocket(int listening_fd) const;
     void _acceptClient(int listening_fd);

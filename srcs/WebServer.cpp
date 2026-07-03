@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 00:32:58 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 00:44:39 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,11 +73,7 @@ WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
 WebServer::~WebServer()
 {
     _closeSockets();
-
-    std::map<int, Client*>::iterator it;
-    for (it = _clients.begin(); it != _clients.end(); ++it)
-        delete it->second;
-    _clients.clear();
+    _closeClients();
 }
 
 void WebServer::run()
@@ -130,6 +126,29 @@ void WebServer::_closeSockets()
     for (size_t i = 0; i < _sockets.size(); ++i)
         close(_sockets[i]);
     _sockets.clear();
+}
+
+void WebServer::_closeClients()
+{
+    std::map<int, Client*>::iterator it;
+    for (it = _clients.begin(); it != _clients.end(); ++it)
+        delete it->second;
+    _clients.clear();
+}
+
+void WebServer::_removeClient(int client_fd)
+{
+    close(client_fd);
+    delete _clients[client_fd];
+    _clients.erase(client_fd);
+    for (size_t i = 0; i < _pollfds.size(); ++i)
+    {
+        if (_pollfds[i].fd == client_fd)
+        {
+            _pollfds.erase(_pollfds.begin() + i);
+            break;
+        }
+    }
 }
 
 void WebServer::_initPollFds()
@@ -187,19 +206,10 @@ void WebServer::_readClient(int client_fd)
 
     if (n <= 0)
     {
-        close(client_fd);
-        delete _clients[client_fd];
-        _clients.erase(client_fd);
-        for (size_t i = 0; i < _pollfds.size(); ++i)
-        {
-            if (_pollfds[i].fd == client_fd)
-            {
-                _pollfds.erase(_pollfds.begin() + i);
-                break;
-            }
-        }
+        _removeClient(client_fd);
         return;
     }
+
     if (n > 0)
     {
         _clients[client_fd]->appendRequest(buf, n);
@@ -231,18 +241,7 @@ void WebServer::_sendResponse(int client_fd)
 {
     std::string const& response = _clients[client_fd]->getResponse();
     send(client_fd, response.c_str(), response.size(), 0);
-
-    close(client_fd);
-    delete _clients[client_fd];
-    _clients.erase(client_fd);
-    for (size_t i = 0; i < _pollfds.size(); ++i)
-    {
-        if (_pollfds[i].fd == client_fd)
-        {
-            _pollfds.erase(_pollfds.begin() + i);
-            break;
-        }
-    }
+    _removeClient(client_fd);
 }
 
 std::ostream& operator<<(std::ostream& os, WebServer const& ws)
