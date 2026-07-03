@@ -16,33 +16,33 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+
 #include "Location.hpp"
 #include "Server.hpp"
 
 class ConfigParser
 {
-	public:
-		ConfigParser(std::string const& filepath);
-		~ConfigParser();
-		
-		std::vector<Server> parse();
-		
-	private:
-		ConfigParser(ConfigParser const& copy);
-		ConfigParser& operator=(ConfigParser const& other);
+public:
+    ConfigParser(std::string const& filepath);
+    ~ConfigParser();
 
-		
-		std::vector<std::string> _tokens;
-		std::size_t _pos;
+    std::vector<Server> parse();
 
-		void _tokenize(std::string const& filpath);
-		Server _parseServer();
-		Location _parseLocation();
+private:
+    ConfigParser(ConfigParser const& copy);
+    ConfigParser& operator=(ConfigParser const& other);
 
-		std::string const& _peek() const;
-		std::string _next();
-		void _expect(std::string const& token);
-		bool _isEnd() const;
+    std::vector<std::string> _tokens;
+    std::size_t _pos;
+
+    void _tokenize(std::string const& filpath);
+    Server _parseServer();
+    Location _parseLocation();
+
+    std::string const& _peek() const;
+    std::string _next();
+    void _expect(std::string const& token);
+    bool _isEnd() const;
 };
 
 #endif
