@@ -78,14 +78,14 @@ std::string const& ConfigParser::_peek() const
 std::string ConfigParser::_next()
 {
     if (_isEnd())
-        throw std::runtime_error("unexpected end of config file");
+        throw std::runtime_error("unexpeted end of config file");
     return _tokens[_pos++];
 }
 
 void ConfigParser::_expect(std::string const& token)
 {
     if (_next() != token)
-        throw std::runtime_error("excpected '" + token + "' in config file");
+        throw std::runtime_error("expected '" + token + "' in config file");
 }
 
 bool ConfigParser::_isEnd() const
@@ -162,7 +162,7 @@ Server ConfigParser::_parseServer()
         }
         else
         {
-            throw std::runtime_error("unknow directive :" + directive);
+            throw std::runtime_error("unknown directive :" + directive);
         }
     }
     _expect("}");
