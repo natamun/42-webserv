@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/02 19:55:43 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/03 14:39:54 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,9 +183,16 @@ bool WebServer::_isListeningSocket(int listening_fd) const
 
 void WebServer::_acceptClient(int listening_fd)
 {
-    int client_fd = accept(listening_fd, NULL, NULL);
+    struct sockaddr_in client_addr;
+    socklen_t len = sizeof(client_addr);
+    int client_fd = accept(listening_fd, (struct sockaddr*)&client_addr, &len);
     if (client_fd == -1)
         throw WebServerException("accept() failed");
+
+    // Right now i just print the client adress, we will stock it on log later
+    std::cout << "[fd=" << client_fd << "] new connection from "
+              << inet_ntoa(client_addr.sin_addr) << ":"
+              << ntohs(client_addr.sin_port) << std::endl;
 
     if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
     {
