@@ -202,7 +202,7 @@ void WebServer::_acceptClient(int listening_fd)
 
     if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
     {
-        close(client_fd);
+        _removeClient(client_fd);
         throw WebServerException("fcntl() failed on client fd");
     }
 
