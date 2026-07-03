@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 00:50:56 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 01:07:27 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -221,23 +221,20 @@ void WebServer::_readClient(int client_fd)
         return;
     }
 
-    if (n > 0)
+    _clients[client_fd]->appendRequest(buf, n);
+
+    if (_clients[client_fd]->getRequest().find("\r\n\r\n") != std::string::npos)
     {
-        _clients[client_fd]->appendRequest(buf, n);
-        if (_clients[client_fd]->getRequest().find("\r\n\r\n") !=
-            std::string::npos)
-        {
-            // We will call HTTP parser but right now we just print the content
-            std::cout << "[fd=" << client_fd << "] request complete:\n";
-            std::cout << _clients[client_fd]->getRequest() << std::endl;
+        // We will call HTTP parser but right now we just print the content
+        std::cout << "[fd=" << client_fd << "] request complete:\n";
+        std::cout << _clients[client_fd]->getRequest() << std::endl;
 
-            // Hardcoded response, will be replaced by HTTP response builder
-            _clients[client_fd]->setResponse(
-                "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: "
-                "close\r\n\r\n");
+        // Hardcoded response, will be replaced by HTTP response builder
+        _clients[client_fd]->setResponse(
+            "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: "
+            "close\r\n\r\n");
 
-            _setPollEvent(client_fd, POLLOUT);
-        }
+        _setPollEvent(client_fd, POLLOUT);
     }
 }
 
