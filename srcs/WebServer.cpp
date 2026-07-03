@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 01:07:27 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 01:14:30 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,6 +134,14 @@ void WebServer::_closeSockets()
     _sockets.clear();
 }
 
+int WebServer::_findPollFd(int fd) const
+{
+    for (int i = 0; i < (int)_pollfds.size(); ++i)
+        if (_pollfds[i].fd == fd)
+            return i;
+    return -1;
+}
+
 void WebServer::_addPollFd(int fd, short events)
 {
     struct pollfd pfd;
@@ -145,14 +153,9 @@ void WebServer::_addPollFd(int fd, short events)
 
 void WebServer::_setPollEvent(int fd, short events)
 {
-    for (size_t i = 0; i < _pollfds.size(); ++i)
-    {
-        if (_pollfds[i].fd == fd)
-        {
-            _pollfds[i].events = events;
-            break;
-        }
-    }
+    int i = _findPollFd(fd);
+    if (i != -1)
+        _pollfds[i].events = events;
 }
 
 void WebServer::_removeClient(int client_fd)
@@ -160,14 +163,9 @@ void WebServer::_removeClient(int client_fd)
     close(client_fd);
     delete _clients[client_fd];
     _clients.erase(client_fd);
-    for (size_t i = 0; i < _pollfds.size(); ++i)
-    {
-        if (_pollfds[i].fd == client_fd)
-        {
-            _pollfds.erase(_pollfds.begin() + i);
-            break;
-        }
-    }
+    int i = _findPollFd(client_fd);
+    if (i != -1)
+        _pollfds.erase(_pollfds.begin() + i);
 }
 
 void WebServer::_closeClients()
