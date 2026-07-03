@@ -6,13 +6,14 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/02 04:21:59 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/03 14:39:54 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "WebServer.hpp"
 
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -57,6 +58,14 @@ WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
                 "listen", _servers[i].host, _servers[i].port);
         }
 
+        if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
+        {
+            close(fd);
+            _closeSockets();
+            throw WebServerException(
+                "fcntl", _servers[i].host, _servers[i].port);
+        }
+
         _sockets.push_back(fd);
     }
 }
@@ -66,7 +75,33 @@ WebServer::~WebServer()
     _closeSockets();
 }
 
-void WebServer::run() {}
+void WebServer::run()
+{
+    _initPollFds();
+
+    while (true)
+    {
+        int ready = poll(&_pollfds[0], _pollfds.size(), -1);
+        if (ready == -1)
+            throw WebServerException("poll() failed");
+
+        for (size_t i = 0; i < _pollfds.size(); ++i)
+        {
+            if (!(_pollfds[i].revents & POLLIN))
+                continue;
+
+            if (_isListeningSocket(_pollfds[i].fd))
+                _acceptClient(_pollfds[i].fd);
+            else
+            {
+                size_t prev_size = _pollfds.size();
+                _readClient(_pollfds[i].fd);
+                if (_pollfds.size() < prev_size)
+                    --i;
+            }
+        }
+    }
+}
 
 std::vector<Server> const& WebServer::getServers() const
 {
@@ -124,4 +159,82 @@ void WebServer::_closeSockets()
     for (size_t i = 0; i < _sockets.size(); ++i)
         close(_sockets[i]);
     _sockets.clear();
+}
+
+void WebServer::_initPollFds()
+{
+    for (size_t i = 0; i < _sockets.size(); ++i)
+    {
+        struct pollfd pfd;
+        pfd.fd = _sockets[i];
+        pfd.events = POLLIN;
+        pfd.revents = 0;
+        _pollfds.push_back(pfd);
+    }
+}
+
+bool WebServer::_isListeningSocket(int listening_fd) const
+{
+    for (size_t i = 0; i < _sockets.size(); ++i)
+        if (_sockets[i] == listening_fd)
+            return true;
+    return false;
+}
+
+void WebServer::_acceptClient(int listening_fd)
+{
+    struct sockaddr_in client_addr;
+    socklen_t len = sizeof(client_addr);
+    int client_fd = accept(listening_fd, (struct sockaddr*)&client_addr, &len);
+    if (client_fd == -1)
+        throw WebServerException("accept() failed");
+
+    // Right now i just print the client adress, we will stock it on log later
+    std::cout << "[fd=" << client_fd << "] new connection from "
+              << inet_ntoa(client_addr.sin_addr) << ":"
+              << ntohs(client_addr.sin_port) << std::endl;
+
+    if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
+    {
+        close(client_fd);
+        throw WebServerException("fcntl() failed on client fd");
+    }
+
+    struct pollfd pfd;
+    pfd.fd = client_fd;
+    pfd.events = POLLIN;
+    pfd.revents = 0;
+    _pollfds.push_back(pfd);
+}
+
+void WebServer::_readClient(int client_fd)
+{
+    char buf[4096];
+
+    ssize_t n = recv(client_fd, buf, sizeof(buf), 0);
+
+    if (n <= 0)
+    {
+        close(client_fd);
+        _requests.erase(client_fd);
+        for (size_t i = 0; i < _pollfds.size(); ++i)
+        {
+            if (_pollfds[i].fd == client_fd)
+            {
+                _pollfds.erase(_pollfds.begin() + i);
+                break;
+            }
+        }
+        return;
+    }
+    if (n > 0)
+    {
+        _requests[client_fd].append(buf, n);
+        if (_requests[client_fd].find("\r\n\r\n") != std::string::npos)
+        {
+            // We will call HTTP parser but right not we just print the content
+            std::cout << "[fd=" << client_fd << "] request complete:\n";
+            std::cout << _requests[client_fd] << std::endl;
+        }
+    }
 }
