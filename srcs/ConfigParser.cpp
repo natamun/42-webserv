@@ -18,7 +18,6 @@
 #include <cstddef>
 #include <cstdlib>
 #include <fstream>
-#include <iostream>
 #include <iterator>
 #include <stdexcept>
 #include <vector>
@@ -172,6 +171,10 @@ Server ConfigParser::_parseServer()
     {
         if (server.locations[i].root.empty())
             server.locations[i].root = server.root;
+        if (server.locations[i].root.empty())
+            throw std::runtime_error(
+                "location '" + server.locations[i].path +
+                "' has no root (and server has no either)");
     }
     return server;
 }
@@ -222,5 +225,9 @@ Location ConfigParser::_parseLocation()
         }
     }
     _expect("}");
+
+    if (loc.methods.empty())
+        throw std::runtime_error("location has no allow_methods defined");
+
     return loc;
 }
