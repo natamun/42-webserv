@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/ConfigParser.hpp"
+#include "ConfigParser.hpp"
 
 #include <netinet/in.h>
 
