@@ -10,5 +10,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Check code format (clang-format)
+        run: find . -name "*.cpp" -o -name "*.hpp" | xargs clang-format --dry-run --Werror
       - name: Compile with make
         run: make
