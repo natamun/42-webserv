@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <fstream>
+#include <iostream>
 #include <iterator>
 #include <stdexcept>
 #include <vector>
@@ -153,6 +154,11 @@ Server ConfigParser::_parseServer()
             _expect("{");
             Location loc = _parseLocation();
             loc.path = path;
+            for (size_t i = 0; i < server.locations.size(); ++i)
+            {
+                if (server.locations[i].path == path)
+                    throw std::runtime_error("duplicate location: " + path);
+            }
             server.locations.push_back(loc);
         }
         else
