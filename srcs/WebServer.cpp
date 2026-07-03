@@ -121,34 +121,17 @@ std::vector<int> const& WebServer::getSockets() const
     return _sockets;
 }
 
+void WebServer::_initPollFds()
+{
+    for (size_t i = 0; i < _sockets.size(); ++i)
+        _addPollFd(_sockets[i], POLLIN);
+}
+
 void WebServer::_closeSockets()
 {
     for (size_t i = 0; i < _sockets.size(); ++i)
         close(_sockets[i]);
     _sockets.clear();
-}
-
-void WebServer::_closeClients()
-{
-    std::map<int, Client*>::iterator it;
-    for (it = _clients.begin(); it != _clients.end(); ++it)
-        delete it->second;
-    _clients.clear();
-}
-
-void WebServer::_removeClient(int client_fd)
-{
-    close(client_fd);
-    delete _clients[client_fd];
-    _clients.erase(client_fd);
-    for (size_t i = 0; i < _pollfds.size(); ++i)
-    {
-        if (_pollfds[i].fd == client_fd)
-        {
-            _pollfds.erase(_pollfds.begin() + i);
-            break;
-        }
-    }
 }
 
 void WebServer::_addPollFd(int fd, short events)
@@ -172,10 +155,27 @@ void WebServer::_setPollEvent(int fd, short events)
     }
 }
 
-void WebServer::_initPollFds()
+void WebServer::_removeClient(int client_fd)
 {
-    for (size_t i = 0; i < _sockets.size(); ++i)
-        _addPollFd(_sockets[i], POLLIN);
+    close(client_fd);
+    delete _clients[client_fd];
+    _clients.erase(client_fd);
+    for (size_t i = 0; i < _pollfds.size(); ++i)
+    {
+        if (_pollfds[i].fd == client_fd)
+        {
+            _pollfds.erase(_pollfds.begin() + i);
+            break;
+        }
+    }
+}
+
+void WebServer::_closeClients()
+{
+    std::map<int, Client*>::iterator it;
+    for (it = _clients.begin(); it != _clients.end(); ++it)
+        delete it->second;
+    _clients.clear();
 }
 
 bool WebServer::_isListeningSocket(int listening_fd) const

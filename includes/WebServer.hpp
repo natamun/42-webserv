@@ -37,12 +37,19 @@ private:
     WebServer(WebServer const& other);
     WebServer& operator=(WebServer const& other);
 
+    // sockets
+    void _initPollFds();
     void _closeSockets();
-    void _closeClients();
-    void _removeClient(int client_fd);
+
+    // poll
     void _addPollFd(int fd, short events);
     void _setPollEvent(int fd, short events);
-    void _initPollFds();
+
+    // clients
+    void _removeClient(int client_fd);
+    void _closeClients();
+
+    // event loop
     bool _isListeningSocket(int listening_fd) const;
     void _acceptClient(int listening_fd);
     void _readClient(int client_fd);
