@@ -125,6 +125,10 @@ std::ostream& operator<<(std::ostream& os, WebServer const& ws)
         os << "[server " << i << "] " << s.host << ":" << s.port
            << " (fd=" << sockets[i] << ")\n";
 
+        os << "  server_name:          "
+           << (s.server_name.empty() ? "-" : s.server_name) << "\n";
+        os << "  root:                 " << (s.root.empty() ? "-" : s.root)
+           << "\n";
         os << "  client_max_body_size: " << s.client_max_body_size << "\n";
 
         os << "  error_pages:\n";
