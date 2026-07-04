@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/03 14:39:54 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 01:28:56 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,7 @@ WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
 WebServer::~WebServer()
 {
     _closeSockets();
+    _closeClients();
 }
 
 void WebServer::run()
@@ -87,17 +88,22 @@ void WebServer::run()
 
         for (size_t i = 0; i < _pollfds.size(); ++i)
         {
-            if (!(_pollfds[i].revents & POLLIN))
-                continue;
-
-            if (_isListeningSocket(_pollfds[i].fd))
-                _acceptClient(_pollfds[i].fd);
-            else
+            if (_pollfds[i].revents & POLLIN)
             {
-                size_t prev_size = _pollfds.size();
-                _readClient(_pollfds[i].fd);
-                if (_pollfds.size() < prev_size)
-                    --i;
+                if (_isListeningSocket(_pollfds[i].fd))
+                    _acceptClient(_pollfds[i].fd);
+                else
+                {
+                    size_t prev_size = _pollfds.size();
+                    _readClient(_pollfds[i].fd);
+                    if (_pollfds.size() < prev_size)
+                        --i;
+                }
+            }
+            else if (_pollfds[i].revents & POLLOUT)
+            {
+                _sendResponse(_pollfds[i].fd);
+                --i;
             }
         }
     }
@@ -111,6 +117,129 @@ std::vector<Server> const& WebServer::getServers() const
 std::vector<int> const& WebServer::getSockets() const
 {
     return _sockets;
+}
+
+void WebServer::_initPollFds()
+{
+    for (size_t i = 0; i < _sockets.size(); ++i)
+        _addPollFd(_sockets[i], POLLIN);
+}
+
+void WebServer::_closeSockets()
+{
+    for (size_t i = 0; i < _sockets.size(); ++i)
+        close(_sockets[i]);
+    _sockets.clear();
+}
+
+int WebServer::_findPollFd(int fd) const
+{
+    for (int i = 0; i < (int)_pollfds.size(); ++i)
+        if (_pollfds[i].fd == fd)
+            return i;
+    return -1;
+}
+
+void WebServer::_addPollFd(int fd, short events)
+{
+    struct pollfd pfd;
+    pfd.fd = fd;
+    pfd.events = events;
+    pfd.revents = 0;
+    _pollfds.push_back(pfd);
+}
+
+void WebServer::_setPollEvent(int fd, short events)
+{
+    int i = _findPollFd(fd);
+    if (i != -1)
+        _pollfds[i].events = events;
+}
+
+void WebServer::_removeClient(int client_fd)
+{
+    close(client_fd);
+    delete _clients[client_fd];
+    _clients.erase(client_fd);
+    int i = _findPollFd(client_fd);
+    if (i != -1)
+        _pollfds.erase(_pollfds.begin() + i);
+}
+
+void WebServer::_closeClients()
+{
+    std::map<int, Client*>::iterator it;
+    for (it = _clients.begin(); it != _clients.end(); ++it)
+        delete it->second;
+    _clients.clear();
+}
+
+bool WebServer::_isListeningSocket(int listening_fd) const
+{
+    for (size_t i = 0; i < _sockets.size(); ++i)
+        if (_sockets[i] == listening_fd)
+            return true;
+    return false;
+}
+
+void WebServer::_acceptClient(int listening_fd)
+{
+    struct sockaddr_in client_addr;
+    socklen_t len = sizeof(client_addr);
+    int client_fd = accept(listening_fd, (struct sockaddr*)&client_addr, &len);
+    if (client_fd == -1)
+        throw WebServerException("accept() failed");
+
+    Client* client = new Client(client_fd,
+                                inet_ntoa(client_addr.sin_addr),
+                                ntohs(client_addr.sin_port));
+    _clients[client_fd] = client;
+    std::cout << *client << std::endl;
+
+    if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
+    {
+        _removeClient(client_fd);
+        throw WebServerException("fcntl() failed on client fd");
+    }
+
+    _addPollFd(client_fd, POLLIN);
+}
+
+void WebServer::_readClient(int client_fd)
+{
+    char buf[4096];
+
+    ssize_t n = recv(client_fd, buf, sizeof(buf), 0);
+
+    if (n <= 0)
+    {
+        _removeClient(client_fd);
+        return;
+    }
+
+    Client* client = _clients[client_fd];
+    client->appendRequest(buf, n);
+
+    if (client->getRequest().find("\r\n\r\n") != std::string::npos)
+    {
+        // We will call HTTP parser but right now we just print the content
+        std::cout << "[fd=" << client_fd << "] request complete:\n";
+        std::cout << client->getRequest() << std::endl;
+
+        // Hardcoded response, will be replaced by HTTP response builder
+        client->setResponse(
+            "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: "
+            "close\r\n\r\n");
+
+        _setPollEvent(client_fd, POLLOUT);
+    }
+}
+
+void WebServer::_sendResponse(int client_fd)
+{
+    std::string const& response = _clients[client_fd]->getResponse();
+    send(client_fd, response.c_str(), response.size(), 0);
+    _removeClient(client_fd);
 }
 
 std::ostream& operator<<(std::ostream& os, WebServer const& ws)
@@ -156,89 +285,4 @@ std::ostream& operator<<(std::ostream& os, WebServer const& ws)
         }
     }
     return os;
-}
-
-void WebServer::_closeSockets()
-{
-    for (size_t i = 0; i < _sockets.size(); ++i)
-        close(_sockets[i]);
-    _sockets.clear();
-}
-
-void WebServer::_initPollFds()
-{
-    for (size_t i = 0; i < _sockets.size(); ++i)
-    {
-        struct pollfd pfd;
-        pfd.fd = _sockets[i];
-        pfd.events = POLLIN;
-        pfd.revents = 0;
-        _pollfds.push_back(pfd);
-    }
-}
-
-bool WebServer::_isListeningSocket(int listening_fd) const
-{
-    for (size_t i = 0; i < _sockets.size(); ++i)
-        if (_sockets[i] == listening_fd)
-            return true;
-    return false;
-}
-
-void WebServer::_acceptClient(int listening_fd)
-{
-    struct sockaddr_in client_addr;
-    socklen_t len = sizeof(client_addr);
-    int client_fd = accept(listening_fd, (struct sockaddr*)&client_addr, &len);
-    if (client_fd == -1)
-        throw WebServerException("accept() failed");
-
-    // Right now i just print the client adress, we will stock it on log later
-    std::cout << "[fd=" << client_fd << "] new connection from "
-              << inet_ntoa(client_addr.sin_addr) << ":"
-              << ntohs(client_addr.sin_port) << std::endl;
-
-    if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
-    {
-        close(client_fd);
-        throw WebServerException("fcntl() failed on client fd");
-    }
-
-    struct pollfd pfd;
-    pfd.fd = client_fd;
-    pfd.events = POLLIN;
-    pfd.revents = 0;
-    _pollfds.push_back(pfd);
-}
-
-void WebServer::_readClient(int client_fd)
-{
-    char buf[4096];
-
-    ssize_t n = recv(client_fd, buf, sizeof(buf), 0);
-
-    if (n <= 0)
-    {
-        close(client_fd);
-        _requests.erase(client_fd);
-        for (size_t i = 0; i < _pollfds.size(); ++i)
-        {
-            if (_pollfds[i].fd == client_fd)
-            {
-                _pollfds.erase(_pollfds.begin() + i);
-                break;
-            }
-        }
-        return;
-    }
-    if (n > 0)
-    {
-        _requests[client_fd].append(buf, n);
-        if (_requests[client_fd].find("\r\n\r\n") != std::string::npos)
-        {
-            // We will call HTTP parser but right not we just print the content
-            std::cout << "[fd=" << client_fd << "] request complete:\n";
-            std::cout << _requests[client_fd] << std::endl;
-        }
-    }
 }
