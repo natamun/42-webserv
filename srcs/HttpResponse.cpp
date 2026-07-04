@@ -60,6 +60,9 @@ std::string HttpResponse::build() const
     std::ostringstream oss;
     oss << "HTTP/1.1 " << _status << " " << _statusMessage() << "\r\n";
 
+    if (_headers.find("Content-Length") == _headers.end())
+        oss << "Content-Length: 0\r\n";
+
     std::map<std::string, std::string>::const_iterator it;
     for (it = _headers.begin(); it != _headers.end(); ++it)
         oss << it->first << ": " << it->second << "\r\n";
