@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 19:31:45 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 23:00:55 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,9 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <cerrno>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <map>
 
@@ -185,6 +187,14 @@ void WebServer::_closeClients()
     _clients.clear();
 }
 
+Server const& WebServer::_findServer(std::string const& host) const
+{
+    for (size_t i = 0; i < _servers.size(); ++i)
+        if (_servers[i].server_name == host)
+            return _servers[i];
+    return _servers[0];
+}
+
 bool WebServer::_isListeningSocket(int listening_fd) const
 {
     for (size_t i = 0; i < _sockets.size(); ++i)
@@ -244,6 +254,8 @@ void WebServer::_handleRequest(int client_fd)
 
     HttpResponse res;
     // TODO: HttpRequest req = parse(client->getRequest());
+    Server const& server = _servers[0];  // TODO: _findServer(req.getHost())
+
     if (true)  // TODO: if (req.isValid())
     {
         std::string method = "GET";  // TODO: req.getMethod()
@@ -261,8 +273,40 @@ void WebServer::_handleRequest(int client_fd)
     else
         res.setStatus(400);
 
+    _handleError(res, server, client->getIp());
+
     client->setResponse(res.build());
     _setPollEvent(client_fd, POLLOUT);
+}
+
+void WebServer::_handleError(HttpResponse& res,
+                             Server const& server,
+                             std::string const& client_ip)
+{
+    if (res.getStatus() < 400)
+        return;
+
+    std::map<int, std::string> const& errorPages = server.error_pages;
+    std::map<int, std::string>::const_iterator it =
+        errorPages.find(res.getStatus());
+
+    if (it != errorPages.end())
+    {
+        std::ifstream file(it->second.c_str());
+        if (file.is_open())
+        {
+            std::string content((std::istreambuf_iterator<char>(file)),
+                                std::istreambuf_iterator<char>());
+            res.setBody(content);
+            res.setHeader("Content-Type", "text/html");
+            return;
+        }
+
+        std::cerr << "[error] " << client_ip
+                  << " cannot open error page: " << it->second << ": "
+                  << strerror(errno) << std::endl;
+    }
+    res.buildDefaultErrorBody();
 }
 
 void WebServer::_sendResponse(int client_fd)
