@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 23:23:37 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 23:45:11 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,8 +115,10 @@ void WebServer::run()
             }
             else if (_pollfds[i].revents & POLLOUT)
             {
+                size_t prev_size = _pollfds.size();
                 _sendResponse(_pollfds[i].fd);
-                --i;
+                if (_pollfds.size() < prev_size)
+                    --i;
             }
         }
     }
@@ -322,9 +324,24 @@ void WebServer::_handleError(HttpResponse& res,
 
 void WebServer::_sendResponse(int client_fd)
 {
-    std::string const& response = _clients[client_fd]->getResponse();
-    send(client_fd, response.c_str(), response.size(), 0);
-    _removeClient(client_fd);
+    Client* client = _clients[client_fd];
+    std::string const& response = client->getResponse();
+    size_t sent = client->getSentBytes();
+
+    ssize_t n =
+        send(client_fd, response.c_str() + sent, response.size() - sent, 0);
+
+    if (n == -1)
+    {
+        std::cerr << "[error] " << client->getIp()
+                  << " send failed: " << strerror(errno) << std::endl;
+        _removeClient(client_fd);
+        return;
+    }
+
+    client->addSentBytes(n);
+    if (client->getSentBytes() >= response.size())
+        _removeClient(client_fd);
 }
 
 std::ostream& operator<<(std::ostream& os, WebServer const& ws)
