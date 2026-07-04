@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 01:28:56 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 15:50:19 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,15 @@ WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
         addr.sin_family = AF_INET;
         addr.sin_port = htons(_servers[i].port);
         addr.sin_addr.s_addr = inet_addr(_servers[i].host.c_str());
+
+        int opt = 1;
+        if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+        {
+            close(fd);
+            _closeSockets();
+            throw WebServerException(
+                "setsockopt", _servers[i].host, _servers[i].port);
+        }
 
         if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1)
         {
