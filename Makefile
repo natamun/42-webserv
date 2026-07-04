@@ -41,12 +41,7 @@ $(NAME): $(OBJ)
 	@echo "$(G)✅ $(NAME) created successfully!$(RES)"
 
 $(OBJ_DIR)/%.o: $(SRCS_DIR)/%.cpp
-	@mkdir -p $(OBJ_DIR)
-	@echo "$(B)🔨 Compiling: $< $(RES)"
-	@$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(OBJ_DIR)/handlers/%.o: $(SRCS_DIR)/handlers/%.cpp
-	@mkdir -p $(OBJ_DIR)/handlers
+	@mkdir -p $(@D)
 	@echo "$(B)🔨 Compiling: $< $(RES)"
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
