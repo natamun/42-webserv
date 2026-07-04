@@ -39,8 +39,8 @@ public:
     std::string const& getMehtod() const;
     std::string const& getUri() const;
     std::string const& getVersion() const;
-    std::map<std::string, std::string> const& getHeaders() const;
     std::string const& getBody() const;
+    std::string const& getHeader(std::string const& key) const;
 
 private:
     State _state;

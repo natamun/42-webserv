@@ -16,7 +16,6 @@
 #include <map>
 #include <sstream>
 #include <string>
-#include <valarray>
 
 HttpRequest::HttpRequest() : _state(PARSING_REQUEST_LINE), _contentLength(0) {}
 
@@ -106,4 +105,54 @@ void HttpRequest::_tryParseHeaders()
         _headers[key] = value;
         _buffer.erase(0, pos + 2);
     }
+}
+
+void HttpRequest::_tryParseBody()
+{
+    if (_buffer.size() < _contentLength)
+        return;
+
+    _body = _buffer.substr(0, _contentLength);
+    _buffer.erase(0, _contentLength);
+    _state = COMPLETE;
+}
+
+void HttpRequest::_fail()
+{
+    _state = ERROR;
+}
+
+bool HttpRequest::isComplete() const
+{
+    return _state == COMPLETE;
+}
+bool HttpRequest::hasError() const
+{
+    return _state == ERROR;
+}
+
+std::string const& HttpRequest::getMehtod() const
+{
+    return _method;
+}
+std::string const& HttpRequest::getUri() const
+{
+    return _uri;
+}
+std::string const& HttpRequest::getBody() const
+{
+    return _body;
+}
+std::string const& HttpRequest::getVersion() const
+{
+    return _version;
+}
+
+std::string const& HttpRequest::getHeader(std::string const& key) const
+{
+    static std::string empty;
+    std::map<std::string, std::string>::const_iterator it = _headers.find(key);
+    if (it == _headers.end())
+        return empty;
+    return it->second;
 }
