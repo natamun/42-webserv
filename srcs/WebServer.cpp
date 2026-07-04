@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 23:21:01 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 23:23:37 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -209,7 +209,11 @@ void WebServer::_acceptClient(int listening_fd)
     socklen_t len = sizeof(client_addr);
     int client_fd = accept(listening_fd, (struct sockaddr*)&client_addr, &len);
     if (client_fd == -1)
-        throw WebServerException("accept() failed");
+    {
+        std::cerr << "[error] accept() failed: " << strerror(errno)
+                  << std::endl;
+        return;
+    }
 
     Client* client = new Client(client_fd,
                                 inet_ntoa(client_addr.sin_addr),
@@ -219,8 +223,9 @@ void WebServer::_acceptClient(int listening_fd)
 
     if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
     {
+        std::cerr << "[error] fcntl() failed: " << strerror(errno) << std::endl;
         _removeClient(client_fd);
-        throw WebServerException("fcntl() failed on client fd");
+        return;
     }
 
     _addPollFd(client_fd, POLLIN);
