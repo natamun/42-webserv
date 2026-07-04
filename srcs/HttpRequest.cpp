@@ -96,7 +96,7 @@ void HttpRequest::_tryParseHeaders()
         std::string key = line.substr(0, colon);
         std::string value = line.substr(colon + 1);
 
-        size_t i = value.find_first_not_of("\t");
+        size_t i = value.find_first_not_of(" \t");
         if (i != std::string::npos)
             value = value.substr(i);
         else
@@ -131,7 +131,7 @@ bool HttpRequest::hasError() const
     return _state == ERROR;
 }
 
-std::string const& HttpRequest::getMehtod() const
+std::string const& HttpRequest::getMethod() const
 {
     return _method;
 }

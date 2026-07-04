@@ -36,7 +36,7 @@ public:
     bool isComplete() const;
     bool hasError() const;
 
-    std::string const& getMehtod() const;
+    std::string const& getMethod() const;
     std::string const& getUri() const;
     std::string const& getVersion() const;
     std::string const& getBody() const;
