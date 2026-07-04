@@ -32,7 +32,7 @@ public:
     HttpRequest();
     ~HttpRequest();
 
-    void appendDate(char const* buf, size_t len);
+    void appendData(char const* buf, size_t len);
     bool isComplete() const;
     bool hasError() const;
 
@@ -52,9 +52,9 @@ private:
     std::string _body;
     size_t _contentLength;
 
-    void _tryParseRequestLine(std::string const& data);
-    void _tryParseHeaders(std::string const& data);
-    void _tryParseBody(std::string const& data);
+    void _tryParseRequestLine();
+    void _tryParseHeaders();
+    void _tryParseBody();
     void _fail();
 };
 
