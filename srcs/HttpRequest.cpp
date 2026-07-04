@@ -13,7 +13,10 @@
 #include "HttpRequest.hpp"
 
 #include <cstddef>
+#include <map>
 #include <sstream>
+#include <string>
+#include <valarray>
 
 HttpRequest::HttpRequest() : _state(PARSING_REQUEST_LINE), _contentLength(0) {}
 
@@ -57,4 +60,50 @@ void HttpRequest::_tryParseRequestLine()
     }
 
     _state = PARSING_HEADERS;
+}
+
+void HttpRequest::_tryParseHeaders()
+{
+    size_t pos;
+    while ((pos = _buffer.find("\r\n")) != std::string::npos)
+    {
+        std::string line = _buffer.substr(0, pos);
+
+        if (line.empty())
+        {
+            _buffer.erase(0, pos + 2);
+
+            std::map<std::string, std::string>::const_iterator it =
+                _headers.find("Content-Length");
+            if (it != _headers.end())
+            {
+                _contentLength = std::atoi(it->second.c_str());
+                _state = PARSING_BODY;
+            }
+            else
+            {
+                _state = COMPLETE;
+            }
+            return;
+        }
+
+        size_t colon = line.find(":");
+        if (colon == std::string::npos)
+        {
+            _fail();
+            return;
+        }
+
+        std::string key = line.substr(0, colon);
+        std::string value = line.substr(colon + 1);
+
+        size_t i = value.find_first_not_of("\t");
+        if (i != std::string::npos)
+            value = value.substr(i);
+        else
+            value.clear();
+
+        _headers[key] = value;
+        _buffer.erase(0, pos + 2);
+    }
 }
