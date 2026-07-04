@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 00:00:00 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 00:18:06 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 18:51:56 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,18 +25,22 @@ int Client::getFd() const
 {
     return _fd;
 }
+
 std::string const& Client::getIp() const
 {
     return _ip;
 }
+
 int Client::getPort() const
 {
     return _port;
 }
+
 std::string const& Client::getRequest() const
 {
     return _request;
 }
+
 std::string const& Client::getResponse() const
 {
     return _response;

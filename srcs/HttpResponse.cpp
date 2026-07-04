@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 15:39:29 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 16:20:26 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 18:51:22 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,8 +90,10 @@ std::string HttpResponse::_statusMessage() const
         statusCodes[501] = "Not Implemented";
         statusCodes[503] = "Service Unavailable";
     }
+
     std::map<int, std::string>::const_iterator it = statusCodes.find(_status);
     if (it != statusCodes.end())
         return it->second;
+
     return "Unknown";
 }
