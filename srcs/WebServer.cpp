@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 23:06:42 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 23:21:01 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -234,6 +234,12 @@ void WebServer::_readClient(int client_fd)
 
     if (n <= 0)
     {
+        if (n == 0)
+            std::cout << "[info] client disconnected: "
+                      << _clients[client_fd]->getIp() << std::endl;
+        else
+            std::cerr << "[error] " << _clients[client_fd]->getIp()
+                      << " recv failed: " << strerror(errno) << std::endl;
         _removeClient(client_fd);
         return;
     }
