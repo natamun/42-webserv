@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 23:46:03 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 23:51:23 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -184,7 +184,10 @@ void WebServer::_closeClients()
 {
     std::map<int, Client*>::iterator it;
     for (it = _clients.begin(); it != _clients.end(); ++it)
+    {
+        close(it->first);
         delete it->second;
+    }
     _clients.clear();
 }
 
