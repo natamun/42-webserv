@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 01:14:32 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 16:19:55 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "Client.hpp"
+#include "HttpResponse.hpp"
 #include "Server.hpp"
 
 class WebServer
@@ -54,6 +55,7 @@ private:
     bool _isListeningSocket(int listening_fd) const;
     void _acceptClient(int listening_fd);
     void _readClient(int client_fd);
+    void _handleRequest(int client_fd);
     void _sendResponse(int client_fd);
 
     std::vector<Server> _servers;
