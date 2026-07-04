@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 23:00:55 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 23:06:42 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -262,11 +262,11 @@ void WebServer::_handleRequest(int client_fd)
         std::string path = "/";      // TODO: req.getPath()
         std::string body = "";       // TODO: req.getBody()
         if (method == "GET")
-            handleGet(path, res);
+            handleGet(path, server, res);
         else if (method == "POST")
-            handlePost(path, body, res);
+            handlePost(path, body, server, res);
         else if (method == "DELETE")
-            handleDelete(path, res);
+            handleDelete(path, server, res);
         else
             res.setStatus(405);
     }
