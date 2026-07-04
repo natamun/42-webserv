@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 16:38:21 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 19:31:45 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include <iostream>
 #include <map>
 
+#include "Handlers.hpp"
 #include "HttpResponse.hpp"
 #include "WebServerException.hpp"
 
@@ -242,21 +243,23 @@ void WebServer::_handleRequest(int client_fd)
     std::cout << client->getRequest() << std::endl;
 
     HttpResponse res;
-    // TODO: parser extrait method + path
-    std::string method = "GET";
-    if (method == "GET")
+    // TODO: HttpRequest req = parse(client->getRequest());
+    if (true)  // TODO: if (req.isValid())
     {
-        // TODO: handleGet(path, res)
-        res.setStatus(200);
-        res.setHeader("Content-Type", "text/html");
-        res.setBody("<h1>Hello from webserv!</h1>");
+        std::string method = "GET";  // TODO: req.getMethod()
+        std::string path = "/";      // TODO: req.getPath()
+        std::string body = "";       // TODO: req.getBody()
+        if (method == "GET")
+            handleGet(path, res);
+        else if (method == "POST")
+            handlePost(path, body, res);
+        else if (method == "DELETE")
+            handleDelete(path, res);
+        else
+            res.setStatus(405);
     }
-    else if (method == "POST")
-        res.setStatus(501);  // TODO: handlePost
-    else if (method == "DELETE")
-        res.setStatus(501);  // TODO: handleDelete
     else
-        res.setStatus(405);
+        res.setStatus(400);
 
     client->setResponse(res.build());
     _setPollEvent(client_fd, POLLOUT);

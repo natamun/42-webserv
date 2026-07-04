@@ -11,8 +11,16 @@ SRCS_FILES	= main.cpp \
 			  Client.cpp \
 			  ConfigParser.cpp \
 			  HttpResponse.cpp
-SRCS		= $(addprefix $(SRCS_DIR)/, $(SRCS_FILES))
-OBJ			= $(addprefix $(OBJ_DIR)/, $(SRCS_FILES:.cpp=.o))
+
+HANDLER_FILES	= GetHandler.cpp \
+				  PostHandler.cpp \
+				  DeleteHandler.cpp
+
+SRCS		= $(addprefix $(SRCS_DIR)/, $(SRCS_FILES)) \
+			  $(addprefix $(SRCS_DIR)/handlers/, $(HANDLER_FILES))
+
+OBJ			= $(addprefix $(OBJ_DIR)/, $(SRCS_FILES:.cpp=.o)) \
+			  $(addprefix $(OBJ_DIR)/handlers/, $(HANDLER_FILES:.cpp=.o))
 
 TEST_NAME		= webserv_test
 SRC_NO_MAIN		= $(filter-out $(SRCS_DIR)/main.cpp, $(SRCS))
@@ -34,6 +42,11 @@ $(NAME): $(OBJ)
 
 $(OBJ_DIR)/%.o: $(SRCS_DIR)/%.cpp
 	@mkdir -p $(OBJ_DIR)
+	@echo "$(B)🔨 Compiling: $< $(RES)"
+	@$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/handlers/%.o: $(SRCS_DIR)/handlers/%.cpp
+	@mkdir -p $(OBJ_DIR)/handlers
 	@echo "$(B)🔨 Compiling: $< $(RES)"
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
