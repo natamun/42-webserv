@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 15:50:19 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 16:19:49 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include <iostream>
 #include <map>
 
+#include "HttpResponse.hpp"
 #include "WebServerException.hpp"
 
 WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
@@ -230,18 +231,35 @@ void WebServer::_readClient(int client_fd)
     client->appendRequest(buf, n);
 
     if (client->getRequest().find("\r\n\r\n") != std::string::npos)
+        _handleRequest(client_fd);
+}
+
+void WebServer::_handleRequest(int client_fd)
+{
+    Client* client = _clients[client_fd];
+
+    std::cout << "[fd=" << client_fd << "] request complete:\n";
+    std::cout << client->getRequest() << std::endl;
+
+    HttpResponse res;
+    // TODO: parser extrait method + path
+    std::string method = "GET";
+    if (method == "GET")
     {
-        // We will call HTTP parser but right now we just print the content
-        std::cout << "[fd=" << client_fd << "] request complete:\n";
-        std::cout << client->getRequest() << std::endl;
-
-        // Hardcoded response, will be replaced by HTTP response builder
-        client->setResponse(
-            "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: "
-            "close\r\n\r\n");
-
-        _setPollEvent(client_fd, POLLOUT);
+        // TODO: handleGet(path, res)
+        res.setStatus(200);
+        res.setHeader("Content-Type", "text/html");
+        res.setBody("<h1>Hello from webserv!</h1>");
     }
+    else if (method == "POST")
+        res.setStatus(501); // TODO: handlePost
+    else if (method == "DELETE")
+        res.setStatus(501); // TODO: handleDelete
+    else
+        res.setStatus(405);
+
+    client->setResponse(res.build());
+    _setPollEvent(client_fd, POLLOUT);
 }
 
 void WebServer::_sendResponse(int client_fd)
