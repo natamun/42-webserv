@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 16:19:49 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 16:38:21 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -252,9 +252,9 @@ void WebServer::_handleRequest(int client_fd)
         res.setBody("<h1>Hello from webserv!</h1>");
     }
     else if (method == "POST")
-        res.setStatus(501); // TODO: handlePost
+        res.setStatus(501);  // TODO: handlePost
     else if (method == "DELETE")
-        res.setStatus(501); // TODO: handleDelete
+        res.setStatus(501);  // TODO: handleDelete
     else
         res.setStatus(405);
 
