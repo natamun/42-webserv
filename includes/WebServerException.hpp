@@ -13,6 +13,8 @@
 #ifndef WEBSERVEREXCEPTION_HPP
 #define WEBSERVEREXCEPTION_HPP
 
+#include <cerrno>
+#include <cstring>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -34,7 +36,8 @@ private:
                               int port)
     {
         std::ostringstream oss;
-        oss << "Error: " << func << "() failed for " << host << ":" << port;
+        oss << "Error: " << func << "() failed for " << host << ":" << port
+            << " : " << strerror(errno);
         return oss.str();
     }
 };
