@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 00:02:05 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 00:18:08 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 23:32:04 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,9 +28,11 @@ public:
     int getPort() const;
     std::string const& getRequest() const;
     std::string const& getResponse() const;
+    size_t getSentBytes() const;
 
     void appendRequest(char const* buf, size_t n);
     void setResponse(std::string const& response);
+    void addSentBytes(size_t n);
 
 private:
     Client(Client const& other);
@@ -41,6 +43,7 @@ private:
     std::string _response;
     std::string _ip;
     int _port;
+    size_t _sent_bytes;
 };
 
 std::ostream& operator<<(std::ostream& os, Client const& client);

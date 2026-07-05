@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 15:39:29 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 18:51:22 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 22:53:18 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,20 @@ void HttpResponse::setBody(std::string const& body)
     std::ostringstream oss;
     oss << body.size();
     _headers["Content-Length"] = oss.str();
+}
+
+int HttpResponse::getStatus() const
+{
+    return _status;
+}
+
+void HttpResponse::buildDefaultErrorBody()
+{
+    std::ostringstream html;
+    html << "<html><body><h1>" << _status << " " << _statusMessage()
+         << "</h1></body></html>";
+    setBody(html.str());
+    setHeader("Content-Type", "text/html");
 }
 
 std::string HttpResponse::build() const

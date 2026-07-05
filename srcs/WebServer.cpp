@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 19:31:45 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 23:51:23 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,9 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <cerrno>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <map>
 
@@ -93,8 +95,7 @@ void WebServer::run()
 
     while (true)
     {
-        int ready = poll(&_pollfds[0], _pollfds.size(), -1);
-        if (ready == -1)
+        if (poll(&_pollfds[0], _pollfds.size(), -1) == -1)
             throw WebServerException("poll() failed");
 
         for (size_t i = 0; i < _pollfds.size(); ++i)
@@ -113,8 +114,10 @@ void WebServer::run()
             }
             else if (_pollfds[i].revents & POLLOUT)
             {
+                size_t prev_size = _pollfds.size();
                 _sendResponse(_pollfds[i].fd);
-                --i;
+                if (_pollfds.size() < prev_size)
+                    --i;
             }
         }
     }
@@ -181,8 +184,19 @@ void WebServer::_closeClients()
 {
     std::map<int, Client*>::iterator it;
     for (it = _clients.begin(); it != _clients.end(); ++it)
+    {
+        close(it->first);
         delete it->second;
+    }
     _clients.clear();
+}
+
+Server const& WebServer::_findServer(std::string const& host) const
+{
+    for (size_t i = 0; i < _servers.size(); ++i)
+        if (_servers[i].server_name == host)
+            return _servers[i];
+    return _servers[0];
 }
 
 bool WebServer::_isListeningSocket(int listening_fd) const
@@ -199,7 +213,11 @@ void WebServer::_acceptClient(int listening_fd)
     socklen_t len = sizeof(client_addr);
     int client_fd = accept(listening_fd, (struct sockaddr*)&client_addr, &len);
     if (client_fd == -1)
-        throw WebServerException("accept() failed");
+    {
+        std::cerr << "[error] accept() failed: " << strerror(errno)
+                  << std::endl;
+        return;
+    }
 
     Client* client = new Client(client_fd,
                                 inet_ntoa(client_addr.sin_addr),
@@ -209,8 +227,9 @@ void WebServer::_acceptClient(int listening_fd)
 
     if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
     {
+        std::cerr << "[error] fcntl() failed: " << strerror(errno) << std::endl;
         _removeClient(client_fd);
-        throw WebServerException("fcntl() failed on client fd");
+        return;
     }
 
     _addPollFd(client_fd, POLLIN);
@@ -224,6 +243,12 @@ void WebServer::_readClient(int client_fd)
 
     if (n <= 0)
     {
+        if (n == 0)
+            std::cout << "[info] client disconnected: "
+                      << _clients[client_fd]->getIp() << std::endl;
+        else
+            std::cerr << "[error] " << _clients[client_fd]->getIp()
+                      << " recv failed: " << strerror(errno) << std::endl;
         _removeClient(client_fd);
         return;
     }
@@ -244,32 +269,81 @@ void WebServer::_handleRequest(int client_fd)
 
     HttpResponse res;
     // TODO: HttpRequest req = parse(client->getRequest());
+    Server const& server = _servers[0];  // TODO: _findServer(req.getHost())
+
     if (true)  // TODO: if (req.isValid())
     {
         std::string method = "GET";  // TODO: req.getMethod()
         std::string path = "/";      // TODO: req.getPath()
         std::string body = "";       // TODO: req.getBody()
         if (method == "GET")
-            handleGet(path, res);
+            handleGet(path, server, res);
         else if (method == "POST")
-            handlePost(path, body, res);
+            handlePost(path, body, server, res);
         else if (method == "DELETE")
-            handleDelete(path, res);
+            handleDelete(path, server, res);
         else
             res.setStatus(405);
     }
     else
         res.setStatus(400);
 
+    _handleError(res, server, client->getIp());
+
     client->setResponse(res.build());
     _setPollEvent(client_fd, POLLOUT);
 }
 
+void WebServer::_handleError(HttpResponse& res,
+                             Server const& server,
+                             std::string const& client_ip)
+{
+    if (res.getStatus() < 400)
+        return;
+
+    std::map<int, std::string> const& errorPages = server.error_pages;
+    std::map<int, std::string>::const_iterator it =
+        errorPages.find(res.getStatus());
+
+    if (it != errorPages.end())
+    {
+        std::ifstream file(it->second.c_str());
+        if (file.is_open())
+        {
+            std::string content((std::istreambuf_iterator<char>(file)),
+                                std::istreambuf_iterator<char>());
+            res.setBody(content);
+            res.setHeader("Content-Type", "text/html");
+            return;
+        }
+
+        std::cerr << "[error] " << client_ip
+                  << " cannot open error page: " << it->second << ": "
+                  << strerror(errno) << std::endl;
+    }
+    res.buildDefaultErrorBody();
+}
+
 void WebServer::_sendResponse(int client_fd)
 {
-    std::string const& response = _clients[client_fd]->getResponse();
-    send(client_fd, response.c_str(), response.size(), 0);
-    _removeClient(client_fd);
+    Client* client = _clients[client_fd];
+    std::string const& response = client->getResponse();
+    size_t sent = client->getSentBytes();
+
+    ssize_t n =
+        send(client_fd, response.c_str() + sent, response.size() - sent, 0);
+
+    if (n == -1)
+    {
+        std::cerr << "[error] " << client->getIp()
+                  << " send failed: " << strerror(errno) << std::endl;
+        _removeClient(client_fd);
+        return;
+    }
+
+    client->addSentBytes(n);
+    if (client->getSentBytes() >= response.size())
+        _removeClient(client_fd);
 }
 
 std::ostream& operator<<(std::ostream& os, WebServer const& ws)
