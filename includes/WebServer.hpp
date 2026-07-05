@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 16:19:55 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 22:53:20 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,11 +51,17 @@ private:
     void _removeClient(int client_fd);
     void _closeClients();
 
+    // routing
+    Server const& _findServer(std::string const& host) const;
+
     // event loop
     bool _isListeningSocket(int listening_fd) const;
     void _acceptClient(int listening_fd);
     void _readClient(int client_fd);
     void _handleRequest(int client_fd);
+    void _handleError(HttpResponse& res,
+                      Server const& server,
+                      std::string const& client_ip);
     void _sendResponse(int client_fd);
 
     std::vector<Server> _servers;

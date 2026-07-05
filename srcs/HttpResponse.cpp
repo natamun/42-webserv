@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 15:39:29 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 16:20:26 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/04 22:53:18 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,10 +55,27 @@ void HttpResponse::setBody(std::string const& body)
     _headers["Content-Length"] = oss.str();
 }
 
+int HttpResponse::getStatus() const
+{
+    return _status;
+}
+
+void HttpResponse::buildDefaultErrorBody()
+{
+    std::ostringstream html;
+    html << "<html><body><h1>" << _status << " " << _statusMessage()
+         << "</h1></body></html>";
+    setBody(html.str());
+    setHeader("Content-Type", "text/html");
+}
+
 std::string HttpResponse::build() const
 {
     std::ostringstream oss;
     oss << "HTTP/1.1 " << _status << " " << _statusMessage() << "\r\n";
+
+    if (_headers.find("Content-Length") == _headers.end())
+        oss << "Content-Length: 0\r\n";
 
     std::map<std::string, std::string>::const_iterator it;
     for (it = _headers.begin(); it != _headers.end(); ++it)
@@ -87,8 +104,10 @@ std::string HttpResponse::_statusMessage() const
         statusCodes[501] = "Not Implemented";
         statusCodes[503] = "Service Unavailable";
     }
+
     std::map<int, std::string>::const_iterator it = statusCodes.find(_status);
     if (it != statusCodes.end())
         return it->second;
+
     return "Unknown";
 }
