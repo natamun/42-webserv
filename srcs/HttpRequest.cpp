@@ -12,7 +12,6 @@
 
 #include "HttpRequest.hpp"
 
-#include <cstddef>
 #include <map>
 #include <sstream>
 #include <string>
@@ -47,18 +46,29 @@ void HttpRequest::_tryParseRequestLine()
     std::istringstream iss(line);
     if (!(iss >> _method >> _uri >> _version))
     {
-        _fail();
+        _fail("Malformed request line: missing method, URI or version");
         return;
     }
 
     std::string extra;
     if (iss >> extra)
     {
-        _fail();
+        _fail("Malformed request line: unexpected extra token after version");
         return;
     }
 
     _state = PARSING_HEADERS;
+}
+
+// ===== Static func for TryParseHeaders =====
+static std::string toLower(std::string string)
+{
+    for (size_t i = 0; i < string.size(); ++i)
+    {
+        string[i] = static_cast<char>(
+            std::tolower(static_cast<unsigned char>(string[i])));
+    }
+    return string;
 }
 
 void HttpRequest::_tryParseHeaders()
@@ -73,10 +83,17 @@ void HttpRequest::_tryParseHeaders()
             _buffer.erase(0, pos + 2);
 
             std::map<std::string, std::string>::const_iterator it =
-                _headers.find("Content-Length");
+                _headers.find("content-length");
             if (it != _headers.end())
             {
-                _contentLength = std::atoi(it->second.c_str());
+                std::istringstream iss(it->second);
+                long len;
+                if (!(iss >> len) || len < 0)
+                {
+                    _fail("Invalid Content-Length value");
+                    return;
+                }
+                _contentLength = static_cast<size_t>(len);
                 _state = PARSING_BODY;
             }
             else
@@ -86,15 +103,15 @@ void HttpRequest::_tryParseHeaders()
             return;
         }
 
-        size_t colon = line.find(":");
-        if (colon == std::string::npos)
+        size_t sep = line.find(":");
+        if (sep == std::string::npos)
         {
-            _fail();
+            _fail("Malformed header line: missing colon");
             return;
         }
 
-        std::string key = line.substr(0, colon);
-        std::string value = line.substr(colon + 1);
+        std::string key = toLower(line.substr(0, sep));
+        std::string value = line.substr(sep + 1);
 
         size_t i = value.find_first_not_of(" \t");
         if (i != std::string::npos)
@@ -117,9 +134,10 @@ void HttpRequest::_tryParseBody()
     _state = COMPLETE;
 }
 
-void HttpRequest::_fail()
+void HttpRequest::_fail(std::string const& reason)
 {
     _state = ERROR;
+    _error = reason;
 }
 
 bool HttpRequest::isComplete() const
@@ -151,8 +169,14 @@ std::string const& HttpRequest::getVersion() const
 std::string const& HttpRequest::getHeader(std::string const& key) const
 {
     static std::string empty;
-    std::map<std::string, std::string>::const_iterator it = _headers.find(key);
+    std::map<std::string, std::string>::const_iterator it =
+        _headers.find(toLower(key));
     if (it == _headers.end())
         return empty;
     return it->second;
+}
+
+std::string const& HttpRequest::getError() const
+{
+    return _error;
 }

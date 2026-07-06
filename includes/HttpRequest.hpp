@@ -41,6 +41,7 @@ public:
     std::string const& getVersion() const;
     std::string const& getBody() const;
     std::string const& getHeader(std::string const& key) const;
+    std::string const& getError() const;
 
 private:
     State _state;
@@ -50,12 +51,13 @@ private:
     std::string _version;
     std::map<std::string, std::string> _headers;
     std::string _body;
+    std::string _error;
     size_t _contentLength;
 
     void _tryParseRequestLine();
     void _tryParseHeaders();
     void _tryParseBody();
-    void _fail();
+    void _fail(std::string const& reason);
 };
 
 #endif
