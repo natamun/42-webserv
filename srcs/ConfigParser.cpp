@@ -14,12 +14,11 @@
 
 #include <netinet/in.h>
 
-#include <cctype>
-#include <cstddef>
-#include <cstdlib>
 #include <fstream>
 #include <iterator>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 ConfigParser::ConfigParser(std::string const& filepath) : _pos(0)
@@ -117,7 +116,13 @@ Server ConfigParser::_parseServer()
 
         if (directive == "listen")
         {
-            server.port = std::atoi(_next().c_str());
+            std::string token = _next();
+            std::istringstream iss(token);
+            int port;
+            if (!(iss >> port) || !iss.eof() || port < 1 || port > 65535)
+                throw std::runtime_error("Invalid listen port: '" + token +
+                                         "'");
+            server.port = port;
             _expect(";");
         }
         else if (directive == "host")
@@ -137,12 +142,25 @@ Server ConfigParser::_parseServer()
         }
         else if (directive == "client_max_body_size")
         {
-            server.client_max_body_size = std::atoi(_next().c_str());
+            std::string token = _next();
+            std::istringstream iss(token);
+            int client_max_body;
+            if (!(iss >> client_max_body) || !iss.eof() || client_max_body < 0)
+            {
+                throw std::runtime_error(
+                    "Invalid client_max_body_size value: '" + token + "'");
+            }
+            server.client_max_body_size = client_max_body;
             _expect(";");
         }
         else if (directive == "error_page")
         {
-            int code = std::atoi(_next().c_str());
+            std::string token = _next();
+            std::istringstream iss(token);
+            int code;
+            if (!(iss >> code) || !iss.eof() || code < 100 || code > 599)
+                throw std::runtime_error("Invalid error_page code: '" + token +
+                                         "'");
             std::string path = _next();
             server.error_pages[code] = path;
             _expect(";");
@@ -206,7 +224,11 @@ Location ConfigParser::_parseLocation()
         }
         else if (directive == "autoindex")
         {
-            loc.autoindex = (_next() == "on");
+            std::string val = _next();
+            if (val != "on" && val != "off")
+                throw std::runtime_error("Invalid autoindex value: '" + val +
+                                         "'");
+            loc.autoindex = (val == "on");
             _expect(";");
         }
         else if (directive == "upload_path")
