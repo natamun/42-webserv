@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebServer.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: nmunari <nmunari@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 22:53:20 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/07 12:55:24 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "Client.hpp"
+#include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
 #include "Server.hpp"
 
@@ -59,6 +60,9 @@ private:
     void _acceptClient(int listening_fd);
     void _readClient(int client_fd);
     void _handleRequest(int client_fd);
+    void _handleMethod(HttpRequest const& request,
+                       Server const& server,
+                       HttpResponse& response);
     void _handleError(HttpResponse& res,
                       Server const& server,
                       std::string const& client_ip);

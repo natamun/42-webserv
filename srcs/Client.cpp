@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: nmunari <nmunari@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 00:00:00 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 23:32:10 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/07 13:00:40 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,8 +70,6 @@ void Client::addSentBytes(size_t n)
 std::ostream& operator<<(std::ostream& os, Client const& client)
 {
     os << "[client fd=" << client.getFd() << " ip=" << client.getIp() << ":"
-       << client.getPort() << "]\n";
-    os << "  request:\n" << client.getRequest() << "\n";
-    os << "  response:\n" << client.getResponse() << "\n";
+       << client.getPort() << "]";
     return os;
 }
