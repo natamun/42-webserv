@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebServer.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: nmunari <nmunari@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 23:51:23 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/07 13:07:09 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@
 #include <map>
 
 #include "Handlers.hpp"
+#include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
 #include "WebServerException.hpp"
 
@@ -223,7 +224,7 @@ void WebServer::_acceptClient(int listening_fd)
                                 inet_ntoa(client_addr.sin_addr),
                                 ntohs(client_addr.sin_port));
     _clients[client_fd] = client;
-    std::cout << *client << std::endl;
+    std::cout << *client << " has been accepted \n" << std::endl;
 
     if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
     {
@@ -267,31 +268,51 @@ void WebServer::_handleRequest(int client_fd)
     std::cout << "[fd=" << client_fd << "] request complete:\n";
     std::cout << client->getRequest() << std::endl;
 
-    HttpResponse res;
-    // TODO: HttpRequest req = parse(client->getRequest());
-    Server const& server = _servers[0];  // TODO: _findServer(req.getHost())
-
-    if (true)  // TODO: if (req.isValid())
+    HttpResponse response;
+    HttpRequest request;
+    request.appendData(client->getRequest().c_str(),
+                       client->getRequest().size());
+    if (request.hasError())
     {
-        std::string method = "GET";  // TODO: req.getMethod()
-        std::string path = "/";      // TODO: req.getPath()
-        std::string body = "";       // TODO: req.getBody()
-        if (method == "GET")
-            handleGet(path, server, res);
-        else if (method == "POST")
-            handlePost(path, body, server, res);
-        else if (method == "DELETE")
-            handleDelete(path, server, res);
-        else
-            res.setStatus(405);
+        std::cerr << "[error] " << _clients[client_fd]->getIp()
+                  << " request failed: " << request.getError() << std::endl;
+        response.setStatus(400);
+        response.buildDefaultErrorBody();
+        client->setResponse(response.build());
+        _setPollEvent(client_fd, POLLOUT);
+        return;
     }
-    else
-        res.setStatus(400);
+    Server const& server = _findServer(request.getHeader("host"));
 
-    _handleError(res, server, client->getIp());
+    _handleMethod(request, server, response);
 
-    client->setResponse(res.build());
+    _handleError(response, server, client->getIp());
+
+    client->setResponse(response.build());
+
+    std::cout << "[fd=" << client_fd << "] response complete:\n";
+    std::cout << client->getResponse() << std::endl;
     _setPollEvent(client_fd, POLLOUT);
+}
+
+void WebServer::_handleMethod(HttpRequest const& request,
+                              Server const& server,
+                              HttpResponse& response)
+{
+    std::string method = request.getMethod();
+    std::string uri = request.getUri();
+
+    if (method == "GET")
+        handleGet(uri, server, response);
+    else if (method == "POST")
+    {
+        std::string body = request.getBody();
+        handlePost(uri, body, server, response);
+    }
+    else if (method == "DELETE")
+        handleDelete(uri, server, response);
+    else
+        response.setStatus(405);
 }
 
 void WebServer::_handleError(HttpResponse& res,
