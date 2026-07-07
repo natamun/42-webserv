@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nmunari <nmunari@student.42.fr>            +#+  +:+       +#+        */
+/*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 00:00:00 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/07 13:00:40 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/07 16:16:28 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ int Client::getPort() const
     return _port;
 }
 
-std::string const& Client::getRequest() const
+HttpRequest const& Client::getRequest() const
 {
     return _request;
 }
@@ -53,7 +53,7 @@ size_t Client::getSentBytes() const
 
 void Client::appendRequest(char const* buf, size_t n)
 {
-    _request.append(buf, n);
+    _request.appendData(buf, n);
 }
 
 void Client::setResponse(std::string const& response)

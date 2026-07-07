@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebServer.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nmunari <nmunari@student.42.fr>            +#+  +:+       +#+        */
+/*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/07 13:07:09 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/07 16:20:40 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -257,21 +257,19 @@ void WebServer::_readClient(int client_fd)
     Client* client = _clients[client_fd];
     client->appendRequest(buf, n);
 
-    if (client->getRequest().find("\r\n\r\n") != std::string::npos)
+    if (client->getRequest().isComplete())
         _handleRequest(client_fd);
 }
 
 void WebServer::_handleRequest(int client_fd)
 {
     Client* client = _clients[client_fd];
+    HttpRequest const& request = client->getRequest();
 
     std::cout << "[fd=" << client_fd << "] request complete:\n";
-    std::cout << client->getRequest() << std::endl;
+    // std::cout << client->getRequest() << std::endl;
 
     HttpResponse response;
-    HttpRequest request;
-    request.appendData(client->getRequest().c_str(),
-                       client->getRequest().size());
     if (request.hasError())
     {
         std::cerr << "[error] " << _clients[client_fd]->getIp()
