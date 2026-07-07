@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/07 17:08:03 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/07 17:12:55 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -268,7 +268,7 @@ void WebServer::_handleRequest(int client_fd)
     HttpRequest const& request = client->getRequest();
 
     std::cout << "[fd=" << client_fd << "] request complete:\n";
-    // std::cout << client->getRequest() << std::endl;
+    std::cout << client->getRequest() << std::endl;
 
     HttpResponse response;
     if (request.hasError())
