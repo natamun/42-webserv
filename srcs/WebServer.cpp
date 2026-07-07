@@ -194,8 +194,9 @@ void WebServer::_closeClients()
 
 Server const& WebServer::_findServer(std::string const& host) const
 {
+    std::string hostname = host.substr(0, host.find(":"));
     for (size_t i = 0; i < _servers.size(); ++i)
-        if (_servers[i].server_name == host)
+        if (_servers[i].server_name == hostname)
             return _servers[i];
     return _servers[0];
 }
