@@ -10,7 +10,10 @@ SRCS_FILES	= main.cpp \
 			  WebServer.cpp \
 			  Client.cpp \
 			  ConfigParser.cpp \
-			  HttpResponse.cpp
+			  HttpRequest.cpp \
+        HttpResponse.cpp
+SRCS		= $(addprefix $(SRCS_DIR)/, $(SRCS_FILES))
+OBJ			= $(addprefix $(OBJ_DIR)/, $(SRCS_FILES:.cpp=.o))
 
 HANDLER_FILES	= GetHandler.cpp \
 				  PostHandler.cpp \
