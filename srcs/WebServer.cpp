@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/07 16:33:15 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/07 17:08:03 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -281,10 +281,13 @@ void WebServer::_handleRequest(int client_fd)
         _setPollEvent(client_fd, POLLOUT);
         return;
     }
+
     Server const& server = _findServer(request.getHeader("host"));
 
     response.setVersion(request.getVersion());
-    _handleMethod(request, server, response);
+
+    if (_isValidRequest(request, server, response))
+        _handleMethod(request, server, response);
 
     _handleError(response, server, client->getIp());
 
@@ -293,6 +296,19 @@ void WebServer::_handleRequest(int client_fd)
     std::cout << "[fd=" << client_fd << "] response complete:\n";
     std::cout << client->getResponse() << std::endl;
     _setPollEvent(client_fd, POLLOUT);
+}
+
+bool WebServer::_isValidRequest(HttpRequest const& request,
+                                Server const& server,
+                                HttpResponse& response)
+{
+    if (request.getBody().size() >
+        static_cast<size_t>(server.client_max_body_size))
+    {
+        response.setStatus(413);
+        return false;
+    }
+    return true;
 }
 
 void WebServer::_handleMethod(HttpRequest const& request,
