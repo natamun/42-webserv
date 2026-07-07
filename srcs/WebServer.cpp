@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/07 17:12:55 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/07 17:49:43 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,7 +97,11 @@ void WebServer::run()
     while (true)
     {
         if (poll(&_pollfds[0], _pollfds.size(), -1) == -1)
+        {
+            if (errno == EINTR)
+                continue;
             throw WebServerException("poll() failed");
+        }
 
         for (size_t i = 0; i < _pollfds.size(); ++i)
         {
