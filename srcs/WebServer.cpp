@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/07 16:20:40 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/07 16:33:15 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -282,6 +282,7 @@ void WebServer::_handleRequest(int client_fd)
     }
     Server const& server = _findServer(request.getHeader("host"));
 
+    response.setVersion(request.getVersion());
     _handleMethod(request, server, response);
 
     _handleError(response, server, client->getIp());

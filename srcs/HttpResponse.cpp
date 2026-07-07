@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 15:39:29 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 22:53:18 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/07 16:33:16 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,13 +14,16 @@
 
 #include <sstream>
 
-HttpResponse::HttpResponse() : _status(200)
+HttpResponse::HttpResponse() : _status(200), _version("HTTP/1.1")
 {
     _headers["Connection"] = "close";
 }
 
 HttpResponse::HttpResponse(HttpResponse const& other)
-    : _status(other._status), _headers(other._headers), _body(other._body)
+    : _status(other._status),
+      _version(other._version),
+      _headers(other._headers),
+      _body(other._body)
 {
 }
 
@@ -31,10 +34,16 @@ HttpResponse& HttpResponse::operator=(HttpResponse const& other)
     if (this != &other)
     {
         _status = other._status;
+        _version = other._version;
         _headers = other._headers;
         _body = other._body;
     }
     return *this;
+}
+
+void HttpResponse::setVersion(std::string const& version)
+{
+    _version = version;
 }
 
 void HttpResponse::setStatus(int code)
@@ -72,7 +81,7 @@ void HttpResponse::buildDefaultErrorBody()
 std::string HttpResponse::build() const
 {
     std::ostringstream oss;
-    oss << "HTTP/1.1 " << _status << " " << _statusMessage() << "\r\n";
+    oss << _version << " " << _status << " " << _statusMessage() << "\r\n";
 
     if (_headers.find("Content-Length") == _headers.end())
         oss << "Content-Length: 0\r\n";
