@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/07 17:49:43 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 01:37:50 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -319,9 +319,11 @@ void WebServer::_handleMethod(HttpRequest const& request,
                               Server const& server,
                               HttpResponse& response)
 {
-    std::string method = request.getMethod();
-    std::string uri = request.getUri();
+    std::string const method = request.getMethod();
+    std::string const uri = request.getUri();
 
+    // if (false)
+    // handleCgi()
     if (method == "GET")
         handleGet(uri, server, response);
     else if (method == "POST")
