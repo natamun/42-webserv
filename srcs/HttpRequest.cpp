@@ -3,16 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dufama <dufama@student.42lausanne.ch>      +#+  +:+       +#+        */
+/*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 16:57:02 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/04 16:57:02 by dufama           ###   ########.fr       */
+/*   Updated: 2026/07/07 17:19:00 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpRequest.hpp"
 
 #include <map>
+#include <ostream>
 #include <sstream>
 #include <string>
 
@@ -166,6 +167,11 @@ std::string const& HttpRequest::getVersion() const
     return _version;
 }
 
+std::map<std::string, std::string> const& HttpRequest::getHeaders() const
+{
+    return _headers;
+}
+
 std::string const& HttpRequest::getHeader(std::string const& key) const
 {
     static std::string empty;
@@ -179,4 +185,20 @@ std::string const& HttpRequest::getHeader(std::string const& key) const
 std::string const& HttpRequest::getError() const
 {
     return _error;
+}
+
+std::ostream& operator<<(std::ostream& os, HttpRequest const& req)
+{
+    os << req.getMethod() << " " << req.getUri() << " " << req.getVersion()
+       << "\n";
+    std::map<std::string, std::string> const& headers = req.getHeaders();
+    std::map<std::string, std::string>::const_iterator it;
+    for (it = headers.begin(); it != headers.end(); ++it)
+        os << it->first << ": " << it->second << "\n";
+    if (!req.getBody().empty())
+        os << "body (" << req.getBody().size() << " bytes):\n"
+           << "  " << req.getBody() << "\n";
+    if (req.hasError())
+        os << "[ERROR] " << req.getError() << "\n";
+    return os;
 }

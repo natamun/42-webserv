@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 00:02:05 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 23:32:04 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/07 16:16:44 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 
 #include <ostream>
 #include <string>
+
+#include "HttpRequest.hpp"
 
 class Client
 {
@@ -26,7 +28,7 @@ public:
     int getFd() const;
     std::string const& getIp() const;
     int getPort() const;
-    std::string const& getRequest() const;
+    HttpRequest const& getRequest() const;
     std::string const& getResponse() const;
     size_t getSentBytes() const;
 
@@ -39,7 +41,7 @@ private:
     Client& operator=(Client const& other);
 
     int _fd;
-    std::string _request;
+    HttpRequest _request;
     std::string _response;
     std::string _ip;
     int _port;

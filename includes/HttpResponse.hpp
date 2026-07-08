@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 15:39:25 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/04 22:53:22 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/07 16:33:18 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ public:
     HttpResponse& operator=(HttpResponse const& other);
 
     void setStatus(int code);
+    void setVersion(std::string const& version);
     void setHeader(std::string const& key, std::string const& value);
     void setBody(std::string const& body);
 
@@ -41,6 +42,7 @@ private:
     std::string _statusMessage() const;
 
     int _status;
+    std::string _version;
     std::map<std::string, std::string> _headers;
     std::string _body;
 };

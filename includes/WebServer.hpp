@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebServer.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nmunari <nmunari@student.42.fr>            +#+  +:+       +#+        */
+/*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/07 12:55:24 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/07 17:08:06 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,9 @@ private:
     void _acceptClient(int listening_fd);
     void _readClient(int client_fd);
     void _handleRequest(int client_fd);
+    bool _isValidRequest(HttpRequest const& request,
+                         Server const& server,
+                         HttpResponse& response);
     void _handleMethod(HttpRequest const& request,
                        Server const& server,
                        HttpResponse& response);

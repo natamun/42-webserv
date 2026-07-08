@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebServer.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nmunari <nmunari@student.42.fr>            +#+  +:+       +#+        */
+/*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/07 13:07:09 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/07 17:49:43 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,7 +97,11 @@ void WebServer::run()
     while (true)
     {
         if (poll(&_pollfds[0], _pollfds.size(), -1) == -1)
+        {
+            if (errno == EINTR)
+                continue;
             throw WebServerException("poll() failed");
+        }
 
         for (size_t i = 0; i < _pollfds.size(); ++i)
         {
@@ -194,8 +198,9 @@ void WebServer::_closeClients()
 
 Server const& WebServer::_findServer(std::string const& host) const
 {
+    std::string hostname = host.substr(0, host.find(":"));
     for (size_t i = 0; i < _servers.size(); ++i)
-        if (_servers[i].server_name == host)
+        if (_servers[i].server_name == hostname)
             return _servers[i];
     return _servers[0];
 }
@@ -257,21 +262,19 @@ void WebServer::_readClient(int client_fd)
     Client* client = _clients[client_fd];
     client->appendRequest(buf, n);
 
-    if (client->getRequest().find("\r\n\r\n") != std::string::npos)
+    if (client->getRequest().isComplete())
         _handleRequest(client_fd);
 }
 
 void WebServer::_handleRequest(int client_fd)
 {
     Client* client = _clients[client_fd];
+    HttpRequest const& request = client->getRequest();
 
     std::cout << "[fd=" << client_fd << "] request complete:\n";
     std::cout << client->getRequest() << std::endl;
 
     HttpResponse response;
-    HttpRequest request;
-    request.appendData(client->getRequest().c_str(),
-                       client->getRequest().size());
     if (request.hasError())
     {
         std::cerr << "[error] " << _clients[client_fd]->getIp()
@@ -282,9 +285,13 @@ void WebServer::_handleRequest(int client_fd)
         _setPollEvent(client_fd, POLLOUT);
         return;
     }
+
     Server const& server = _findServer(request.getHeader("host"));
 
-    _handleMethod(request, server, response);
+    response.setVersion(request.getVersion());
+
+    if (_isValidRequest(request, server, response))
+        _handleMethod(request, server, response);
 
     _handleError(response, server, client->getIp());
 
@@ -293,6 +300,19 @@ void WebServer::_handleRequest(int client_fd)
     std::cout << "[fd=" << client_fd << "] response complete:\n";
     std::cout << client->getResponse() << std::endl;
     _setPollEvent(client_fd, POLLOUT);
+}
+
+bool WebServer::_isValidRequest(HttpRequest const& request,
+                                Server const& server,
+                                HttpResponse& response)
+{
+    if (request.getBody().size() >
+        static_cast<size_t>(server.client_max_body_size))
+    {
+        response.setStatus(413);
+        return false;
+    }
+    return true;
 }
 
 void WebServer::_handleMethod(HttpRequest const& request,
