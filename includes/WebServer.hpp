@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/07 17:08:06 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 01:44:13 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include "Client.hpp"
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
+#include "Location.hpp"
 #include "Server.hpp"
 
 class WebServer
@@ -54,6 +55,8 @@ private:
 
     // routing
     Server const& _findServer(std::string const& host) const;
+    Location const* _findLocation(std::string const& uri,
+                                  Server const& server) const;
 
     // event loop
     bool _isListeningSocket(int listening_fd) const;

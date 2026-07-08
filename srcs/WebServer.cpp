@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 01:37:50 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 01:56:42 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -203,6 +203,21 @@ Server const& WebServer::_findServer(std::string const& host) const
         if (_servers[i].server_name == hostname)
             return _servers[i];
     return _servers[0];
+}
+
+Location const* WebServer::_findLocation(std::string const& uri,
+                                         Server const& server) const
+{
+    Location const* best = NULL;
+    for (size_t i = 0; i < server.locations.size(); ++i)
+    {
+        if (uri.find(server.locations[i].path) == 0)
+        {
+            if (!best || server.locations[i].path.size() > best->path.size())
+                best = &server.locations[i];
+        }
+    }
+    return best;
 }
 
 bool WebServer::_isListeningSocket(int listening_fd) const
