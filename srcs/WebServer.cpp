@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 02:09:47 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 02:24:16 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -452,6 +452,10 @@ std::ostream& operator<<(std::ostream& os, WebServer const& ws)
                << (loc.upload_path.empty() ? "-" : loc.upload_path) << "\n";
             os << "      redirect:   "
                << (loc.redirect.empty() ? "-" : loc.redirect) << "\n";
+            os << "      cgi_ext:    "
+               << (loc.cgi_extension.empty() ? "-" : loc.cgi_extension) << "\n";
+            os << "      cgi_path:   "
+               << (loc.cgi_path.empty() ? "-" : loc.cgi_path) << "\n";
         }
     }
     return os;

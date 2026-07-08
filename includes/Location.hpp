@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 00:35:46 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/02 00:36:40 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 01:09:17 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,8 @@ public:
     bool autoindex;
     std::string upload_path;
     std::string redirect;
+    std::string cgi_extension;
+    std::string cgi_path;
 };
 
 #endif
