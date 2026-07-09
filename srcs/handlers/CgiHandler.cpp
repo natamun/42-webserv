@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 01:02:49 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 20:24:22 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 20:50:37 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,6 @@ static void closePipes(int pipe_in[2], int pipe_out[2])
 
 static void runChild(int pipe_in[2],
                      int pipe_out[2],
-                     std::string const& uri,
                      HttpRequest const& request,
                      Location const& loc)
 {
@@ -45,6 +44,7 @@ static void runChild(int pipe_in[2],
     closePipes(pipe_in, pipe_out);
     chdir(loc.root.c_str());
 
+    std::string const& uri = request.getUri();
     size_t q = uri.find('?');
     std::string uri_path = uri.substr(0, q);
     std::string query_string =
@@ -77,9 +77,7 @@ static void runChild(int pipe_in[2],
     exit(1);
 }
 
-CgiProcess spawnCgi(std::string const& uri,
-                    HttpRequest const& request,
-                    Location const& loc)
+CgiProcess spawnCgi(HttpRequest const& request, Location const& loc)
 {
     int pipe_in[2];
     int pipe_out[2];
@@ -108,7 +106,7 @@ CgiProcess spawnCgi(std::string const& uri,
         return failed;
     }
     if (pid == 0)
-        runChild(pipe_in, pipe_out, uri, request, loc);
+        runChild(pipe_in, pipe_out, request, loc);
 
     close(pipe_in[0]);
     close(pipe_out[1]);

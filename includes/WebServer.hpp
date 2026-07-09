@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 19:11:05 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 21:13:32 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,9 +67,14 @@ private:
     bool _isValidRequest(HttpRequest const& request,
                          Server const& server,
                          HttpResponse& response);
-    void _handleMethod(HttpRequest const& request,
+    void _handleMethod(int client_fd,
+                       HttpRequest const& request,
                        Server const& server,
                        HttpResponse& response);
+    void _handleCgi(int client_fd,
+                    HttpRequest const& request,
+                    Location const& loc,
+                    HttpResponse& response);
     void _handleError(HttpResponse& res,
                       Server const& server,
                       std::string const& client_ip);

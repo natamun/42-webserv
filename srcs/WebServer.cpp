@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 20:00:38 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 21:13:28 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -320,7 +320,10 @@ void WebServer::_handleRequest(int client_fd)
     response.setVersion(request.getVersion());
 
     if (_isValidRequest(request, server, response))
-        _handleMethod(request, server, response);
+        _handleMethod(client_fd, request, server, response);
+
+    if (client->hasCgi())
+        return;
 
     _handleError(response, server, client->getIp());
 
@@ -344,7 +347,8 @@ bool WebServer::_isValidRequest(HttpRequest const& request,
     return true;
 }
 
-void WebServer::_handleMethod(HttpRequest const& request,
+void WebServer::_handleMethod(int client_fd,
+                              HttpRequest const& request,
                               Server const& server,
                               HttpResponse& response)
 {
@@ -360,7 +364,7 @@ void WebServer::_handleMethod(HttpRequest const& request,
     std::string const method = request.getMethod();
 
     if (_isCgi(uri, *loc))
-        spawnCgi(uri, request, *loc);
+        _handleCgi(client_fd, request, *loc, response);
     else if (method == "GET")
         handleGet(uri, server, *loc, response);
     else if (method == "POST")
@@ -372,6 +376,25 @@ void WebServer::_handleMethod(HttpRequest const& request,
         handleDelete(uri, server, *loc, response);
     else
         response.setStatus(405);
+}
+
+void WebServer::_handleCgi(int client_fd,
+                           HttpRequest const& request,
+                           Location const& loc,
+                           HttpResponse& response)
+{
+    CgiProcess proc = spawnCgi(request, loc);
+    if (proc.pid == -1)
+    {
+        response.setStatus(500);
+        return;
+    }
+    _clients[client_fd]->setCgi(proc);
+    _addPollFd(proc.pipe_out, POLLIN);
+    if (request.getMethod() == "POST")
+        _addPollFd(proc.pipe_in, POLLOUT);
+    else
+        close(proc.pipe_in);
 }
 
 void WebServer::_handleError(HttpResponse& res,

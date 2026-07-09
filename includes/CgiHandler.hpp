@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 19:30:00 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 20:24:20 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 21:13:35 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,9 +28,7 @@ struct CgiProcess
     int pipe_out;
 };
 
-CgiProcess spawnCgi(std::string const& uri,
-                    HttpRequest const& request,
-                    Location const& loc);
+CgiProcess spawnCgi(HttpRequest const& request, Location const& loc);
 
 void buildCgiResponse(std::string const& output, HttpResponse& response);
 
