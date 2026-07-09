@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 18:33:21 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 19:16:04 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -227,7 +227,10 @@ bool WebServer::_isCgi(std::string const& uri, Location const& loc) const
     size_t dot = uri.rfind('.');
     if (dot == std::string::npos)
         return false;
-    return uri.substr(dot) == loc.cgi_extension;
+    size_t q = uri.find('?');
+    std::string ext =
+        uri.substr(dot, q == std::string::npos ? std::string::npos : q - dot);
+    return ext == loc.cgi_extension;
 }
 
 bool WebServer::_isListeningSocket(int listening_fd) const
@@ -357,9 +360,7 @@ void WebServer::_handleMethod(HttpRequest const& request,
 
     if (_isCgi(uri, *loc))
         handleCgi(uri, request, *loc, response);
-    else if (_isCgi(uri, *loc))
-        handleCgi(uri, request, *loc, response);
-    if (method == "GET")
+    else if (method == "GET")
         handleGet(uri, server, *loc, response);
     else if (method == "POST")
     {
