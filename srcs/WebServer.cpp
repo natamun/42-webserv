@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/07 17:49:43 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 02:09:47 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -205,6 +205,21 @@ Server const& WebServer::_findServer(std::string const& host) const
     return _servers[0];
 }
 
+Location const* WebServer::_findLocation(std::string const& uri,
+                                         Server const& server) const
+{
+    Location const* best = NULL;
+    for (size_t i = 0; i < server.locations.size(); ++i)
+    {
+        if (uri.find(server.locations[i].path) == 0)
+        {
+            if (!best || server.locations[i].path.size() > best->path.size())
+                best = &server.locations[i];
+        }
+    }
+    return best;
+}
+
 bool WebServer::_isListeningSocket(int listening_fd) const
 {
     for (size_t i = 0; i < _sockets.size(); ++i)
@@ -319,18 +334,28 @@ void WebServer::_handleMethod(HttpRequest const& request,
                               Server const& server,
                               HttpResponse& response)
 {
-    std::string method = request.getMethod();
-    std::string uri = request.getUri();
+    std::string const uri = request.getUri();
+    Location const* loc = _findLocation(uri, server);
 
+    if (loc == NULL)
+    {
+        response.setStatus(404);
+        return;
+    }
+
+    std::string const method = request.getMethod();
+    // if (isCgi)
+    //   handleCgi(...);
+    // else if (method = get)....
     if (method == "GET")
-        handleGet(uri, server, response);
+        handleGet(uri, server, *loc, response);
     else if (method == "POST")
     {
         std::string body = request.getBody();
-        handlePost(uri, body, server, response);
+        handlePost(uri, body, server, *loc, response);
     }
     else if (method == "DELETE")
-        handleDelete(uri, server, response);
+        handleDelete(uri, server, *loc, response);
     else
         response.setStatus(405);
 }
