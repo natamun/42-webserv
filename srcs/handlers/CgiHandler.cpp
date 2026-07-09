@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 01:02:49 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 20:00:41 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 20:24:22 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <cstring>
 #include <iostream>
 #include <sstream>
+#include <string>
 
 static void closePipes(int pipe_in[2], int pipe_out[2])
 {
@@ -114,4 +115,68 @@ CgiProcess spawnCgi(std::string const& uri,
 
     CgiProcess proc = {pid, pipe_in[1], pipe_out[0]};
     return proc;
+}
+
+static bool setSeparator(std::string const& output,
+                         size_t& sep,
+                         std::string& eol)
+{
+    sep = output.find("\r\n\r\n");
+    if (sep != std::string::npos)
+    {
+        eol = "\r\n";
+        return true;
+    }
+    sep = output.find("\n\n");
+    if (sep != std::string::npos)
+    {
+        eol = "\n";
+        return true;
+    }
+    return false;
+}
+
+void buildCgiResponse(std::string const& output, HttpResponse& response)
+{
+    size_t sep;
+    std::string eol;
+
+    if (!setSeparator(output, sep, eol))
+    {
+        response.setStatus(502);
+        return;
+    }
+
+    std::string headers_raw = output.substr(0, sep);
+    std::string body = output.substr(sep + eol.size() * 2);
+
+    response.setStatus(200);
+
+    size_t pos = 0;
+    while (pos < headers_raw.size())
+    {
+        size_t end = headers_raw.find(eol, pos);
+        if (end == std::string::npos)
+            end = headers_raw.size();
+
+        std::string line = headers_raw.substr(pos, end - pos);
+        size_t colon = line.find(": ");
+        if (colon != std::string::npos)
+        {
+            std::string key = line.substr(0, colon);
+            std::string val = line.substr(colon + 2);
+            if (key == "Status")
+            {
+                std::istringstream iss(val);
+                int code;
+                iss >> code;
+                response.setStatus(code);
+            }
+            else
+                response.setHeader(key, val);
+        }
+        pos = end + eol.size();
+    }
+
+    response.setBody(body);
 }

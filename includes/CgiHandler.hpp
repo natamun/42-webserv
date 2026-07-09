@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 19:30:00 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 20:00:45 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 20:24:20 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,5 +31,7 @@ struct CgiProcess
 CgiProcess spawnCgi(std::string const& uri,
                     HttpRequest const& request,
                     Location const& loc);
+
+void buildCgiResponse(std::string const& output, HttpResponse& response);
 
 #endif
