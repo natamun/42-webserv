@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 02:24:16 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 18:33:21 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -220,6 +220,16 @@ Location const* WebServer::_findLocation(std::string const& uri,
     return best;
 }
 
+bool WebServer::_isCgi(std::string const& uri, Location const& loc) const
+{
+    if (loc.cgi_extension.empty() || loc.cgi_path.empty())
+        return false;
+    size_t dot = uri.rfind('.');
+    if (dot == std::string::npos)
+        return false;
+    return uri.substr(dot) == loc.cgi_extension;
+}
+
 bool WebServer::_isListeningSocket(int listening_fd) const
 {
     for (size_t i = 0; i < _sockets.size(); ++i)
@@ -344,9 +354,11 @@ void WebServer::_handleMethod(HttpRequest const& request,
     }
 
     std::string const method = request.getMethod();
-    // if (isCgi)
-    //   handleCgi(...);
-    // else if (method = get)....
+
+    if (_isCgi(uri, *loc))
+        handleCgi(uri, request, *loc, response);
+    else if (_isCgi(uri, *loc))
+        handleCgi(uri, request, *loc, response);
     if (method == "GET")
         handleGet(uri, server, *loc, response);
     else if (method == "POST")
