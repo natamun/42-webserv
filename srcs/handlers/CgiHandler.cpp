@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 01:02:49 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 20:50:37 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 21:47:38 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,7 @@ CgiProcess spawnCgi(HttpRequest const& request, Location const& loc)
     int pipe_in[2];
     int pipe_out[2];
     pid_t pid;
-    CgiProcess failed = {-1, -1, -1};
+    CgiProcess failed;
 
     if (pipe(pipe_in) == -1)
     {
@@ -111,7 +111,10 @@ CgiProcess spawnCgi(HttpRequest const& request, Location const& loc)
     close(pipe_in[0]);
     close(pipe_out[1]);
 
-    CgiProcess proc = {pid, pipe_in[1], pipe_out[0]};
+    CgiProcess proc;
+    proc.pid = pid;
+    proc.pipe_in = pipe_in[1];
+    proc.pipe_out = pipe_out[0];
     return proc;
 }
 

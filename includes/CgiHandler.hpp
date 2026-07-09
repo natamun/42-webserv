@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 19:30:00 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 21:13:35 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 21:47:57 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ struct CgiProcess
     pid_t pid;
     int pipe_in;
     int pipe_out;
+    CgiProcess() : pid(-1), pipe_in(-1), pipe_out(-1) {}
 };
 
 CgiProcess spawnCgi(HttpRequest const& request, Location const& loc);

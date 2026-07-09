@@ -6,24 +6,16 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 00:00:00 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 21:13:30 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 21:47:40 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Client.hpp"
 
-Client::Client()
-    : _fd(-1), _port(0), _sent_bytes(0), _cgi({-1, -1, -1}), _has_cgi(false)
-{
-}
+Client::Client() : _fd(-1), _port(0), _sent_bytes(0), _cgi(), _has_cgi(false) {}
 
 Client::Client(int fd, std::string const& ip, int port)
-    : _fd(fd),
-      _ip(ip),
-      _port(port),
-      _sent_bytes(0),
-      _cgi({-1, -1, -1}),
-      _has_cgi(false)
+    : _fd(fd), _ip(ip), _port(port), _sent_bytes(0), _cgi(), _has_cgi(false)
 {
 }
 
@@ -103,7 +95,7 @@ void Client::appendCgiOutput(char const* buf, size_t n)
 
 void Client::clearCgi()
 {
-    _cgi = {-1, -1, -1};
+    _cgi = CgiProcess();
     _cgi_output.clear();
     _has_cgi = false;
 }
