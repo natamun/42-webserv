@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webserv</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 0 20px;
+            line-height: 1.5;
+        }
+        h1 {
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        nav a {
+            margin-right: 15px;
+        }
+        form {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+        }
+        input[type="submit"] {
+            margin-top: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bienvenue sur mon webserv</h1>
+
+    <nav>
+        <a href="/">Accueil</a>
+        <a href="/about.html">A propos</a>
+    </nav>
+
+    <h2>Test d'upload</h2>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <label for="file">Choisir un fichier :</label><br>
+        <input type="file" id="file" name="file">
+        <br>
+        <input type="submit" value="Envoyer">
+    </form>
+
+    <h2>Test d'image</h2>
+    <img src="/images/logo.png" alt="logo" width="150">
+
+</body>
+</html>
