@@ -12,7 +12,10 @@
 
 #include "HttpResponse.hpp"
 
+#include <fstream>
+#include <map>
 #include <sstream>
+#include <string>
 
 HttpResponse::HttpResponse() : _status(200), _version("HTTP/1.1")
 {
@@ -119,4 +122,24 @@ std::string HttpResponse::_statusMessage() const
         return it->second;
 
     return "Unknown";
+}
+
+void HttpResponse::setErrorStatus(int code,
+                                  std::map<int, std::string> const& errorPages)
+{
+    _status = code;
+    std::map<int, std::string>::const_iterator it = errorPages.find(code);
+    if (it != errorPages.end())
+    {
+        std::ifstream file(it->second.c_str(), std::ios::in | std::ios::binary);
+        if (file.is_open())
+        {
+            std::ostringstream ss;
+            ss << file.rdbuf();
+            setBody(ss.str());
+            setHeader("Content-Type", "text/html");
+            return;
+        }
+    }
+    buildDefaultErrorBody();
 }

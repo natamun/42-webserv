@@ -35,6 +35,7 @@ public:
 
     int getStatus() const;
     void buildDefaultErrorBody();
+    void setErrorStatus(int code, std::map<int, std::string> const& errorPages);
 
     std::string build() const;
 
