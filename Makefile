@@ -17,7 +17,8 @@ OBJ			= $(addprefix $(OBJ_DIR)/, $(SRCS_FILES:.cpp=.o))
 
 HANDLER_FILES	= GetHandler.cpp \
 				  PostHandler.cpp \
-				  DeleteHandler.cpp
+				  DeleteHandler.cpp \
+				  CgiHandler.cpp
 
 SRCS		= $(addprefix $(SRCS_DIR)/, $(SRCS_FILES)) \
 			  $(addprefix $(SRCS_DIR)/handlers/, $(HANDLER_FILES))

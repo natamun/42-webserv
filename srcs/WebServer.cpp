@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 19:16:04 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 20:00:38 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@
 #include <iostream>
 #include <map>
 
+#include "CgiHandler.hpp"
 #include "Handlers.hpp"
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
@@ -359,7 +360,7 @@ void WebServer::_handleMethod(HttpRequest const& request,
     std::string const method = request.getMethod();
 
     if (_isCgi(uri, *loc))
-        handleCgi(uri, request, *loc, response);
+        spawnCgi(uri, request, *loc);
     else if (method == "GET")
         handleGet(uri, server, *loc, response);
     else if (method == "POST")
