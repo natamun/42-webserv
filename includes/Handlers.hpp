@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 18:33:25 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 01:33:34 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 02:09:53 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,15 +27,18 @@ void handleCgi(std::string const& uri,
 
 void handleGet(std::string const& path,
                Server const& server,
+               Location const& loc,
                HttpResponse& res);
 
 void handlePost(std::string const& path,
                 std::string const& body,
                 Server const& server,
+                Location const& loc,
                 HttpResponse& res);
 
 void handleDelete(std::string const& path,
                   Server const& server,
+                  Location const& loc,
                   HttpResponse& res);
 
 #endif

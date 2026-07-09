@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 01:56:42 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/09 02:09:47 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -334,20 +334,28 @@ void WebServer::_handleMethod(HttpRequest const& request,
                               Server const& server,
                               HttpResponse& response)
 {
-    std::string const method = request.getMethod();
     std::string const uri = request.getUri();
+    Location const* loc = _findLocation(uri, server);
 
-    // if (false)
-    // handleCgi()
+    if (loc == NULL)
+    {
+        response.setStatus(404);
+        return;
+    }
+
+    std::string const method = request.getMethod();
+    // if (isCgi)
+    //   handleCgi(...);
+    // else if (method = get)....
     if (method == "GET")
-        handleGet(uri, server, response);
+        handleGet(uri, server, *loc, response);
     else if (method == "POST")
     {
         std::string body = request.getBody();
-        handlePost(uri, body, server, response);
+        handlePost(uri, body, server, *loc, response);
     }
     else if (method == "DELETE")
-        handleDelete(uri, server, response);
+        handleDelete(uri, server, *loc, response);
     else
         response.setStatus(405);
 }
