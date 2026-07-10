@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 21:13:32 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 02:15:36 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,19 +71,28 @@ private:
                        HttpRequest const& request,
                        Server const& server,
                        HttpResponse& response);
+    void _handleError(HttpResponse& res,
+                      Server const& server,
+                      std::string const& client_ip);
+    void _finalizeResponse(int client_fd,
+                           HttpResponse& response,
+                           Server const& server);
+    void _sendResponse(int client_fd);
+
+    // cgi
     void _handleCgi(int client_fd,
                     HttpRequest const& request,
                     Location const& loc,
                     HttpResponse& response);
-    void _handleError(HttpResponse& res,
-                      Server const& server,
-                      std::string const& client_ip);
-    void _sendResponse(int client_fd);
+    void _removeCgiPipe(int cgi_fd);
+    void _readCgiOutput(int cgi_fd);
+    void _writeCgiBody(int cgi_fd);
 
     std::vector<Server> _servers;
     std::vector<int> _sockets;
     std::vector<struct pollfd> _pollfds;
     std::map<int, Client*> _clients;
+    std::map<int, int> _pipe_to_client;
 };
 
 std::ostream& operator<<(std::ostream& os, WebServer const& ws);

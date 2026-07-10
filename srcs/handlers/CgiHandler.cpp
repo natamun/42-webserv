@@ -6,12 +6,13 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 01:02:49 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 21:47:38 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 02:15:30 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CgiHandler.hpp"
 
+#include <fcntl.h>
 #include <unistd.h>
 
 #include <cerrno>
@@ -51,22 +52,40 @@ static void runChild(int pipe_in[2],
         (q != std::string::npos) ? uri.substr(q + 1) : "";
     std::string script_name = uri_path.substr(uri_path.rfind('/') + 1);
 
+    std::string host = request.getHeader("host");
+    size_t colon = host.find(':');
+    std::string server_name = host.substr(0, colon);
+    std::string server_port =
+        (colon != std::string::npos) ? host.substr(colon + 1) : "80";
+
     std::ostringstream oss;
     oss << request.getBody().size();
 
     std::string method = "REQUEST_METHOD=" + request.getMethod();
     std::string query = "QUERY_STRING=" + query_string;
     std::string script = "SCRIPT_FILENAME=" + script_name;
+    std::string script_nm = "SCRIPT_NAME=" + uri_path;
     std::string path_info = "PATH_INFO=" + uri;
     std::string cont_length = "CONTENT_LENGTH=" + oss.str();
     std::string cont_type = "CONTENT_TYPE=" + request.getHeader("content-type");
+    std::string protocol = "SERVER_PROTOCOL=" + request.getVersion();
+    std::string srv_name = "SERVER_NAME=" + server_name;
+    std::string srv_port = "SERVER_PORT=" + server_port;
+    std::string gateway = "GATEWAY_INTERFACE=CGI/1.1";
+    std::string redirect = "REDIRECT_STATUS=200";
 
     char* env[] = {const_cast<char*>(method.c_str()),
                    const_cast<char*>(query.c_str()),
                    const_cast<char*>(script.c_str()),
+                   const_cast<char*>(script_nm.c_str()),
                    const_cast<char*>(path_info.c_str()),
                    const_cast<char*>(cont_length.c_str()),
                    const_cast<char*>(cont_type.c_str()),
+                   const_cast<char*>(protocol.c_str()),
+                   const_cast<char*>(srv_name.c_str()),
+                   const_cast<char*>(srv_port.c_str()),
+                   const_cast<char*>(gateway.c_str()),
+                   const_cast<char*>(redirect.c_str()),
                    NULL};
     char* argv[] = {const_cast<char*>(loc.cgi_path.c_str()),
                     const_cast<char*>(script_name.c_str()),
@@ -110,6 +129,15 @@ CgiProcess spawnCgi(HttpRequest const& request, Location const& loc)
 
     close(pipe_in[0]);
     close(pipe_out[1]);
+
+    if (fcntl(pipe_in[1], F_SETFL, O_NONBLOCK) == -1 ||
+        fcntl(pipe_out[0], F_SETFL, O_NONBLOCK) == -1)
+    {
+        std::cerr << "[cgi] fcntl() failed: " << strerror(errno) << std::endl;
+        close(pipe_in[1]);
+        close(pipe_out[0]);
+        return failed;
+    }
 
     CgiProcess proc;
     proc.pid = pid;

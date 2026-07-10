@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 21:13:28 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 02:15:32 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <csignal>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -32,6 +33,7 @@
 
 WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
 {
+    signal(SIGCHLD, SIG_IGN);
     for (size_t i = 0; i < _servers.size(); ++i)
     {
         int fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -106,22 +108,26 @@ void WebServer::run()
 
         for (size_t i = 0; i < _pollfds.size(); ++i)
         {
-            if (_pollfds[i].revents & POLLIN)
+            int fd = _pollfds[i].fd;
+            if (_pollfds[i].revents & (POLLIN | POLLHUP))
             {
-                if (_isListeningSocket(_pollfds[i].fd))
-                    _acceptClient(_pollfds[i].fd);
+                size_t prev_size = _pollfds.size();
+                if (_isListeningSocket(fd))
+                    _acceptClient(fd);
+                else if (_pipe_to_client.count(fd))
+                    _readCgiOutput(fd);
                 else
-                {
-                    size_t prev_size = _pollfds.size();
-                    _readClient(_pollfds[i].fd);
-                    if (_pollfds.size() < prev_size)
-                        --i;
-                }
+                    _readClient(fd);
+                if (_pollfds.size() < prev_size)
+                    --i;
             }
             else if (_pollfds[i].revents & POLLOUT)
             {
                 size_t prev_size = _pollfds.size();
-                _sendResponse(_pollfds[i].fd);
+                if (_pipe_to_client.count(fd))
+                    _writeCgiBody(fd);
+                else
+                    _sendResponse(fd);
                 if (_pollfds.size() < prev_size)
                     --i;
             }
@@ -178,8 +184,19 @@ void WebServer::_setPollEvent(int fd, short events)
 
 void WebServer::_removeClient(int client_fd)
 {
+    Client* client = _clients[client_fd];
+
+    if (client->hasCgi())
+    {
+        CgiProcess const& proc = client->getCgi();
+        if (_pipe_to_client.count(proc.pipe_in))
+            _removeCgiPipe(proc.pipe_in);
+        if (_pipe_to_client.count(proc.pipe_out))
+            _removeCgiPipe(proc.pipe_out);
+    }
+
     close(client_fd);
-    delete _clients[client_fd];
+    delete client;
     _clients.erase(client_fd);
     int i = _findPollFd(client_fd);
     if (i != -1)
@@ -322,16 +339,8 @@ void WebServer::_handleRequest(int client_fd)
     if (_isValidRequest(request, server, response))
         _handleMethod(client_fd, request, server, response);
 
-    if (client->hasCgi())
-        return;
-
-    _handleError(response, server, client->getIp());
-
-    client->setResponse(response.build());
-
-    std::cout << "[fd=" << client_fd << "] response complete:\n";
-    std::cout << client->getResponse() << std::endl;
-    _setPollEvent(client_fd, POLLOUT);
+    if (!client->hasCgi())
+        _finalizeResponse(client_fd, response, server);
 }
 
 bool WebServer::_isValidRequest(HttpRequest const& request,
@@ -378,25 +387,6 @@ void WebServer::_handleMethod(int client_fd,
         response.setStatus(405);
 }
 
-void WebServer::_handleCgi(int client_fd,
-                           HttpRequest const& request,
-                           Location const& loc,
-                           HttpResponse& response)
-{
-    CgiProcess proc = spawnCgi(request, loc);
-    if (proc.pid == -1)
-    {
-        response.setStatus(500);
-        return;
-    }
-    _clients[client_fd]->setCgi(proc);
-    _addPollFd(proc.pipe_out, POLLIN);
-    if (request.getMethod() == "POST")
-        _addPollFd(proc.pipe_in, POLLOUT);
-    else
-        close(proc.pipe_in);
-}
-
 void WebServer::_handleError(HttpResponse& res,
                              Server const& server,
                              std::string const& client_ip)
@@ -427,6 +417,18 @@ void WebServer::_handleError(HttpResponse& res,
     res.buildDefaultErrorBody();
 }
 
+void WebServer::_finalizeResponse(int client_fd,
+                                  HttpResponse& response,
+                                  Server const& server)
+{
+    Client* client = _clients[client_fd];
+    _handleError(response, server, client->getIp());
+    client->setResponse(response.build());
+    std::cout << "[fd=" << client_fd << "] response complete:\n";
+    std::cout << client->getResponse() << std::endl;
+    _setPollEvent(client_fd, POLLOUT);
+}
+
 void WebServer::_sendResponse(int client_fd)
 {
     Client* client = _clients[client_fd];
@@ -447,6 +449,87 @@ void WebServer::_sendResponse(int client_fd)
     client->addSentBytes(n);
     if (client->getSentBytes() >= response.size())
         _removeClient(client_fd);
+}
+
+void WebServer::_handleCgi(int client_fd,
+                           HttpRequest const& request,
+                           Location const& loc,
+                           HttpResponse& response)
+{
+    CgiProcess proc = spawnCgi(request, loc);
+    if (proc.pid == -1)
+    {
+        response.setStatus(500);
+        return;
+    }
+    _clients[client_fd]->setCgi(proc);
+    _addPollFd(proc.pipe_out, POLLIN);
+    _pipe_to_client[proc.pipe_out] = client_fd;
+    if (request.getMethod() == "POST")
+    {
+        _addPollFd(proc.pipe_in, POLLOUT);
+        _pipe_to_client[proc.pipe_in] = client_fd;
+    }
+    else
+        close(proc.pipe_in);
+}
+
+void WebServer::_removeCgiPipe(int cgi_fd)
+{
+    int i = _findPollFd(cgi_fd);
+    if (i != -1)
+        _pollfds.erase(_pollfds.begin() + i);
+    _pipe_to_client.erase(cgi_fd);
+    close(cgi_fd);
+}
+
+void WebServer::_readCgiOutput(int cgi_fd)
+{
+    int client_fd = _pipe_to_client[cgi_fd];
+    Client* client = _clients[client_fd];
+    char buf[4096];
+
+    ssize_t n = read(cgi_fd, buf, sizeof(buf));
+
+    if (n <= 0)
+    {
+        _removeCgiPipe(cgi_fd);
+
+        HttpResponse response;
+        response.setVersion(client->getRequest().getVersion());
+
+        if (n == 0)
+        {
+            std::cout << "[info] cgi output complete: " << client->getIp()
+                      << std::endl;
+            buildCgiResponse(client->getCgiOutput(), response);
+        }
+        else
+        {
+            std::cerr << "[error] cgi read failed: " << client->getIp()
+                      << std::endl;
+            response.setStatus(502);
+        }
+
+        Server const& server =
+            _findServer(client->getRequest().getHeader("host"));
+        client->clearCgi();
+        _finalizeResponse(client_fd, response, server);
+
+        return;
+    }
+
+    client->appendCgiOutput(buf, n);
+}
+
+void WebServer::_writeCgiBody(int cgi_fd)
+{
+    int client_fd = _pipe_to_client[cgi_fd];
+    Client* client = _clients[client_fd];
+    std::string const& body = client->getRequest().getBody();
+
+    write(cgi_fd, body.c_str(), body.size());
+    _removeCgiPipe(cgi_fd);
 }
 
 std::ostream& operator<<(std::ostream& os, WebServer const& ws)
