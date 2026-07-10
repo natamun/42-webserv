@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/10 03:34:00 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 03:52:17 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -524,9 +524,21 @@ void WebServer::_writeCgiBody(int cgi_fd)
     int client_fd = _pipe_to_client[cgi_fd];
     Client* client = _clients[client_fd];
     std::string const& body = client->getRequest().getBody();
+    size_t sent = client->getCgi().body_sent;
 
-    write(cgi_fd, body.c_str(), body.size());
-    _removeCgiPipe(cgi_fd);
+    ssize_t n = write(cgi_fd, body.c_str() + sent, body.size() - sent);
+
+    if (n == -1)
+    {
+        std::cerr << "[error] " << client->getIp()
+                  << " cgi write failed: " << strerror(errno) << std::endl;
+        _removeCgiPipe(cgi_fd);
+        return;
+    }
+
+    client->getCgi().body_sent += n;
+    if (client->getCgi().body_sent >= body.size())
+        _removeCgiPipe(cgi_fd);
 }
 
 std::ostream& operator<<(std::ostream& os, WebServer const& ws)
