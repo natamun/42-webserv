@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   test_requesthttp.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dufama <dufama@student.42lausanne.ch>      +#+  +:+       +#+        */
+/*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 17:48:12 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/04 17:48:12 by dufama           ###   ########.fr       */
+/*   Updated: 2026/07/10 02:23:02 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -219,6 +219,55 @@ void test_getWithoutBody()
     PASS();
 }
 
+// ---- Test 11 : POST chunked complet en un seul appendData ----
+void test_chunkedBody()
+{
+    TEST("POST with Transfer-Encoding: chunked decoded correctly");
+    HttpRequest req;
+    std::string raw =
+        "POST /upload HTTP/1.1\r\n"
+        "Transfer-Encoding: chunked\r\n"
+        "\r\n"
+        "5\r\n"
+        "hello\r\n"
+        "6\r\n"
+        " world\r\n"
+        "0\r\n"
+        "\r\n";
+    req.appendData(raw.c_str(), raw.size());
+
+    ASSERT_TRUE(req.isComplete());
+    ASSERT_TRUE(!req.hasError());
+    ASSERT_TRUE(req.getBody() == "hello world");
+    PASS();
+}
+
+// ---- Test 12 : chunked fragmenté en plusieurs appendData ----
+void test_chunkedBodyFragmented()
+{
+    TEST("chunked body split across multiple appendData calls");
+    HttpRequest req;
+
+    std::string part1 =
+        "POST /upload HTTP/1.1\r\n"
+        "Transfer-Encoding: chunked\r\n"
+        "\r\n"
+        "5\r\n";
+    std::string part2 = "hello\r\n";
+    std::string part3 = "0\r\n\r\n";
+
+    req.appendData(part1.c_str(), part1.size());
+    ASSERT_TRUE(!req.isComplete());
+
+    req.appendData(part2.c_str(), part2.size());
+    ASSERT_TRUE(!req.isComplete());
+
+    req.appendData(part3.c_str(), part3.size());
+    ASSERT_TRUE(req.isComplete());
+    ASSERT_TRUE(req.getBody() == "hello");
+    PASS();
+}
+
 int main()
 {
     test_simpleGet();
@@ -231,6 +280,8 @@ int main()
     test_multipleHeaders();
     test_headerWithExtraSpaces();
     test_getWithoutBody();
+    test_chunkedBody();
+    test_chunkedBodyFragmented();
 
     std::cout << "\n"
               << g_testsPassed << "/" << g_testsRun << " tests passed."

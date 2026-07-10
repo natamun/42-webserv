@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 16:26:47 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/07 17:18:50 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 02:23:06 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ public:
         PARSING_REQUEST_LINE,
         PARSING_HEADERS,
         PARSING_BODY,
+        PARSING_CHUNKED_BODY,
         COMPLETE,
         ERROR
     };
@@ -59,6 +60,7 @@ private:
     void _tryParseRequestLine();
     void _tryParseHeaders();
     void _tryParseBody();
+    void _tryParseChunkedBody();
     void _fail(std::string const& reason);
 };
 
