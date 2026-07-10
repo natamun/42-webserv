@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 01:02:49 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/10 02:15:30 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 03:23:58 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,9 @@ static void runChild(int pipe_in[2],
     std::string const& uri = request.getUri();
     size_t q = uri.find('?');
     std::string uri_path = uri.substr(0, q);
+    size_t dot = uri_path.rfind('.');
+    std::string ext = (dot != std::string::npos) ? uri_path.substr(dot) : "";
+    std::string interpreter = loc.cgi.count(ext) ? loc.cgi.at(ext) : "";
     std::string query_string =
         (q != std::string::npos) ? uri.substr(q + 1) : "";
     std::string script_name = uri_path.substr(uri_path.rfind('/') + 1);
@@ -91,11 +94,11 @@ static void runChild(int pipe_in[2],
                    const_cast<char*>(gateway.c_str()),
                    const_cast<char*>(redirect.c_str()),
                    NULL};
-    char* argv[] = {const_cast<char*>(loc.cgi_path.c_str()),
+    char* argv[] = {const_cast<char*>(interpreter.c_str()),
                     const_cast<char*>(script_name.c_str()),
                     NULL};
 
-    execve(loc.cgi_path.c_str(), argv, env);
+    execve(interpreter.c_str(), argv, env);
     std::cerr << "[cgi] execve() failed: " << strerror(errno) << std::endl;
     exit(1);
 }

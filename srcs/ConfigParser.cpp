@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 16:57:46 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/09 01:13:18 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 03:24:01 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -241,14 +241,11 @@ Location ConfigParser::_parseLocation()
             loc.redirect = _next();
             _expect(";");
         }
-        else if (directive == "cgi_extension")
+        else if (directive == "cgi")
         {
-            loc.cgi_extension = _next();
-            _expect(";");
-        }
-        else if (directive == "cgi_path")
-        {
-            loc.cgi_path = _next();
+            std::string ext = _next();
+            std::string path = _next();
+            loc.cgi[ext] = path;
             _expect(";");
         }
         else

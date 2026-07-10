@@ -6,13 +6,14 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 00:35:46 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 01:09:17 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 03:24:10 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef LOCATION_HPP
 #define LOCATION_HPP
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -26,8 +27,7 @@ public:
     bool autoindex;
     std::string upload_path;
     std::string redirect;
-    std::string cgi_extension;
-    std::string cgi_path;
+    std::map<std::string, std::string> cgi;
 };
 
 #endif

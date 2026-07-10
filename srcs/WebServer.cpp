@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/10 02:15:32 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 03:24:04 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -240,7 +240,7 @@ Location const* WebServer::_findLocation(std::string const& uri,
 
 bool WebServer::_isCgi(std::string const& uri, Location const& loc) const
 {
-    if (loc.cgi_extension.empty() || loc.cgi_path.empty())
+    if (loc.cgi.empty())
         return false;
     size_t dot = uri.rfind('.');
     if (dot == std::string::npos)
@@ -248,7 +248,7 @@ bool WebServer::_isCgi(std::string const& uri, Location const& loc) const
     size_t q = uri.find('?');
     std::string ext =
         uri.substr(dot, q == std::string::npos ? std::string::npos : q - dot);
-    return ext == loc.cgi_extension;
+    return loc.cgi.count(ext) > 0;
 }
 
 bool WebServer::_isListeningSocket(int listening_fd) const
@@ -572,10 +572,11 @@ std::ostream& operator<<(std::ostream& os, WebServer const& ws)
                << (loc.upload_path.empty() ? "-" : loc.upload_path) << "\n";
             os << "      redirect:   "
                << (loc.redirect.empty() ? "-" : loc.redirect) << "\n";
-            os << "      cgi_ext:    "
-               << (loc.cgi_extension.empty() ? "-" : loc.cgi_extension) << "\n";
-            os << "      cgi_path:   "
-               << (loc.cgi_path.empty() ? "-" : loc.cgi_path) << "\n";
+            os << "      cgi:\n";
+            std::map<std::string, std::string>::const_iterator cgi_it;
+            for (cgi_it = loc.cgi.begin(); cgi_it != loc.cgi.end(); ++cgi_it)
+                os << "        " << cgi_it->first << " -> " << cgi_it->second
+                   << "\n";
         }
     }
     return os;
