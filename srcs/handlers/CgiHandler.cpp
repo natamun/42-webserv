@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 01:02:49 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/10 03:23:58 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 03:30:33 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,14 +49,10 @@ static void runChild(int pipe_in[2],
         exit(1);
     }
 
-    std::string const& uri = request.getUri();
-    size_t q = uri.find('?');
-    std::string uri_path = uri.substr(0, q);
-    size_t dot = uri_path.rfind('.');
-    std::string ext = (dot != std::string::npos) ? uri_path.substr(dot) : "";
+    std::string uri_path = request.getPath();
+    std::string ext = request.getExtension();
     std::string interpreter = loc.cgi.count(ext) ? loc.cgi.at(ext) : "";
-    std::string query_string =
-        (q != std::string::npos) ? uri.substr(q + 1) : "";
+    std::string query_string = request.getQueryString();
     std::string script_name = uri_path.substr(uri_path.rfind('/') + 1);
 
     std::string host = request.getHeader("host");
@@ -72,7 +68,7 @@ static void runChild(int pipe_in[2],
     std::string query = "QUERY_STRING=" + query_string;
     std::string script = "SCRIPT_FILENAME=" + script_name;
     std::string script_nm = "SCRIPT_NAME=" + uri_path;
-    std::string path_info = "PATH_INFO=" + uri;
+    std::string path_info = "PATH_INFO=" + request.getUri();
     std::string cont_length = "CONTENT_LENGTH=" + oss.str();
     std::string cont_type = "CONTENT_TYPE=" + request.getHeader("content-type");
     std::string protocol = "SERVER_PROTOCOL=" + request.getVersion();
