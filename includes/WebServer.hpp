@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/10 02:15:36 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 03:34:02 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ private:
     Server const& _findServer(std::string const& host) const;
     Location const* _findLocation(std::string const& uri,
                                   Server const& server) const;
-    bool _isCgi(std::string const& uri, Location const& loc) const;
+    bool _isCgi(HttpRequest const& request, Location const& loc) const;
 
     // event loop
     bool _isListeningSocket(int listening_fd) const;

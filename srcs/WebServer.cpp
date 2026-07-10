@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/10 03:24:04 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 03:34:00 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -238,16 +238,13 @@ Location const* WebServer::_findLocation(std::string const& uri,
     return best;
 }
 
-bool WebServer::_isCgi(std::string const& uri, Location const& loc) const
+bool WebServer::_isCgi(HttpRequest const& request, Location const& loc) const
 {
     if (loc.cgi.empty())
         return false;
-    size_t dot = uri.rfind('.');
-    if (dot == std::string::npos)
+    std::string ext = request.getExtension();
+    if (ext.empty())
         return false;
-    size_t q = uri.find('?');
-    std::string ext =
-        uri.substr(dot, q == std::string::npos ? std::string::npos : q - dot);
     return loc.cgi.count(ext) > 0;
 }
 
@@ -372,7 +369,7 @@ void WebServer::_handleMethod(int client_fd,
 
     std::string const method = request.getMethod();
 
-    if (_isCgi(uri, *loc))
+    if (_isCgi(request, *loc))
         _handleCgi(client_fd, request, *loc, response);
     else if (method == "GET")
         handleGet(uri, server, *loc, response);
