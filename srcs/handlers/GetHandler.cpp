@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   GetHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: dufama <dufama@student.42lausanne.ch>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/07/04 18:33:44 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 02:09:50 by nmunari          ###   ########.fr       */
+/*   Created: 2026/07/10 10:13:21 by dufama            #+#    #+#             */
+/*   Updated: 2026/07/10 10:13:21 by dufama           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,40 @@
 
 #include <cstddef>
 #include <fstream>
+#include <map>
 #include <sstream>
+#include <string>
 
 #include "Handlers.hpp"
+
+static std::string getMimeType(std::string const& path)
+{
+    static std::map<std::string, std::string> mimeTypes;
+    if (mimeTypes.empty())
+    {
+        mimeTypes[".html"] = "text/html";
+        mimeTypes[".htm"] = "text/html";
+        mimeTypes[".css"] = "text/css";
+        mimeTypes[".js"] = "application/javascript";
+        mimeTypes[".json"] = "application/json";
+        mimeTypes[".png"] = "image/png";
+        mimeTypes[".jpg"] = "image/jpeg";
+        mimeTypes[".jpeg"] = "image/jpeg";
+        mimeTypes[".gif"] = "image/gif";
+        mimeTypes[".txt"] = "text/plain";
+        mimeTypes[".pdf"] = "application/pdf";
+    }
+    size_t dot = path.find_last_of('.');
+    if (dot == std::string::npos)
+        return "application/octect-stream";
+
+    std::string ext = path.substr(dot);
+    std::map<std::string, std::string>::const_iterator it = mimeTypes.find(ext);
+    if (it == mimeTypes.end())
+        return "application/octct-stream";
+
+    return it->second;
+}
 
 void handleGet(std::string const& path,
                Server const& server,
@@ -36,7 +67,7 @@ void handleGet(std::string const& path,
         return;
     }
 
-    std::string filePath = loc.root + path.substr(loc.path.size());
+    std::string filePath = loc.root + path;
 
     struct stat st;
     if (stat(filePath.c_str(), &st) != 0)
@@ -69,6 +100,6 @@ void handleGet(std::string const& path,
     ss << file.rdbuf();
 
     res.setStatus(200);
-    res.setHeader("Content-Type", "coucou");
+    res.setHeader("Content-Type", getMimeType(filePath));
     res.setBody(ss.str());
 }
