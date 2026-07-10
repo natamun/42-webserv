@@ -43,7 +43,11 @@ static void runChild(int pipe_in[2],
         exit(1);
     }
     closePipes(pipe_in, pipe_out);
-    chdir(loc.root.c_str());
+    if (chdir(loc.root.c_str()) == -1)
+    {
+        std::cerr << "[cgi] chdir() failed: " << strerror(errno) << std::endl;
+        exit(1);
+    }
 
     std::string const& uri = request.getUri();
     size_t q = uri.find('?');
