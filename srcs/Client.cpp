@@ -6,16 +6,16 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 00:00:00 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/07 16:16:28 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 03:49:37 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Client.hpp"
 
-Client::Client() : _fd(-1), _port(0), _sent_bytes(0) {}
+Client::Client() : _fd(-1), _port(0), _sent_bytes(0), _cgi(), _has_cgi(false) {}
 
 Client::Client(int fd, std::string const& ip, int port)
-    : _fd(fd), _ip(ip), _port(port), _sent_bytes(0)
+    : _fd(fd), _ip(ip), _port(port), _sent_bytes(0), _cgi(), _has_cgi(false)
 {
 }
 
@@ -65,6 +65,44 @@ void Client::setResponse(std::string const& response)
 void Client::addSentBytes(size_t n)
 {
     _sent_bytes += n;
+}
+
+CgiProcess const& Client::getCgi() const
+{
+    return _cgi;
+}
+
+CgiProcess& Client::getCgi()
+{
+    return _cgi;
+}
+
+std::string const& Client::getCgiOutput() const
+{
+    return _cgi_output;
+}
+
+bool Client::hasCgi() const
+{
+    return _has_cgi;
+}
+
+void Client::setCgi(CgiProcess const& cgi)
+{
+    _cgi = cgi;
+    _has_cgi = true;
+}
+
+void Client::appendCgiOutput(char const* buf, size_t n)
+{
+    _cgi_output.append(buf, n);
+}
+
+void Client::clearCgi()
+{
+    _cgi = CgiProcess();
+    _cgi_output.clear();
+    _has_cgi = false;
 }
 
 std::ostream& operator<<(std::ostream& os, Client const& client)

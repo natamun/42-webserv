@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 01:44:13 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 03:34:02 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,7 @@ private:
     Server const& _findServer(std::string const& host) const;
     Location const* _findLocation(std::string const& uri,
                                   Server const& server) const;
+    bool _isCgi(HttpRequest const& request, Location const& loc) const;
 
     // event loop
     bool _isListeningSocket(int listening_fd) const;
@@ -66,18 +67,32 @@ private:
     bool _isValidRequest(HttpRequest const& request,
                          Server const& server,
                          HttpResponse& response);
-    void _handleMethod(HttpRequest const& request,
+    void _handleMethod(int client_fd,
+                       HttpRequest const& request,
                        Server const& server,
                        HttpResponse& response);
     void _handleError(HttpResponse& res,
                       Server const& server,
                       std::string const& client_ip);
+    void _finalizeResponse(int client_fd,
+                           HttpResponse& response,
+                           Server const& server);
     void _sendResponse(int client_fd);
+
+    // cgi
+    void _handleCgi(int client_fd,
+                    HttpRequest const& request,
+                    Location const& loc,
+                    HttpResponse& response);
+    void _removeCgiPipe(int cgi_fd);
+    void _readCgiOutput(int cgi_fd);
+    void _writeCgiBody(int cgi_fd);
 
     std::vector<Server> _servers;
     std::vector<int> _sockets;
     std::vector<struct pollfd> _pollfds;
     std::map<int, Client*> _clients;
+    std::map<int, int> _pipe_to_client;
 };
 
 std::ostream& operator<<(std::ostream& os, WebServer const& ws);

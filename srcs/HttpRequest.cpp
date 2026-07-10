@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 16:57:02 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/07 17:19:00 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 03:28:06 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,8 @@ void HttpRequest::appendData(char const* buf, size_t len)
         _tryParseHeaders();
     if (_state == PARSING_BODY)
         _tryParseBody();
+    if (_state == PARSING_CHUNKED_BODY)
+        _tryParseChunkedBody();
 }
 
 void HttpRequest::_tryParseRequestLine()
@@ -97,6 +99,10 @@ void HttpRequest::_tryParseHeaders()
                 _contentLength = static_cast<size_t>(len);
                 _state = PARSING_BODY;
             }
+            else if (getHeader("transfer-encoding") == "chunked")
+            {
+                _state = PARSING_CHUNKED_BODY;
+            }
             else
             {
                 _state = COMPLETE;
@@ -122,6 +128,32 @@ void HttpRequest::_tryParseHeaders()
 
         _headers[key] = value;
         _buffer.erase(0, pos + 2);
+    }
+}
+
+void HttpRequest::_tryParseChunkedBody()
+{
+    while (true)
+    {
+        size_t crlf = _buffer.find("\r\n");
+        if (crlf == std::string::npos)
+            return;
+
+        size_t chunk_size = strtoul(_buffer.substr(0, crlf).c_str(), NULL, 16);
+
+        if (_buffer.size() < crlf + 2 + chunk_size + 2)
+            return;
+
+        _buffer.erase(0, crlf + 2);
+
+        if (chunk_size == 0)
+        {
+            _state = COMPLETE;
+            return;
+        }
+
+        _body.append(_buffer, 0, chunk_size);
+        _buffer.erase(0, chunk_size + 2);
     }
 }
 
@@ -185,6 +217,32 @@ std::string const& HttpRequest::getHeader(std::string const& key) const
 std::string const& HttpRequest::getError() const
 {
     return _error;
+}
+
+std::string HttpRequest::getPath() const
+{
+    size_t q = _uri.find('?');
+    return _uri.substr(0, q);
+}
+
+std::string HttpRequest::getQueryString() const
+{
+    size_t q = _uri.find('?');
+    if (q == std::string::npos)
+        return "";
+    return _uri.substr(q + 1);
+}
+
+std::string HttpRequest::getExtension() const
+{
+    std::string path = getPath();
+    size_t slash = path.rfind('/');
+    size_t dot = path.rfind('.');
+    if (dot == std::string::npos)
+        return "";
+    if (slash != std::string::npos && dot < slash)
+        return "";
+    return path.substr(dot);
 }
 
 std::ostream& operator<<(std::ostream& os, HttpRequest const& req)

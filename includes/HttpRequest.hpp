@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 16:26:47 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/07 17:18:50 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 03:28:07 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ public:
         PARSING_REQUEST_LINE,
         PARSING_HEADERS,
         PARSING_BODY,
+        PARSING_CHUNKED_BODY,
         COMPLETE,
         ERROR
     };
@@ -44,6 +45,9 @@ public:
     std::map<std::string, std::string> const& getHeaders() const;
     std::string const& getHeader(std::string const& key) const;
     std::string const& getError() const;
+    std::string getPath() const;
+    std::string getQueryString() const;
+    std::string getExtension() const;
 
 private:
     State _state;
@@ -59,6 +63,7 @@ private:
     void _tryParseRequestLine();
     void _tryParseHeaders();
     void _tryParseBody();
+    void _tryParseChunkedBody();
     void _fail(std::string const& reason);
 };
 

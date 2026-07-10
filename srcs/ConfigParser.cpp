@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ConfigParser.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dufama <dufama@student.42lausanne.ch>      +#+  +:+       +#+        */
+/*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 16:57:46 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/02 16:57:46 by dufama           ###   ########.fr       */
+/*   Updated: 2026/07/10 03:24:01 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -241,9 +241,17 @@ Location ConfigParser::_parseLocation()
             loc.redirect = _next();
             _expect(";");
         }
+        else if (directive == "cgi")
+        {
+            std::string ext = _next();
+            std::string path = _next();
+            loc.cgi[ext] = path;
+            _expect(";");
+        }
         else
         {
-            throw std::runtime_error("unknown location directive" + directive);
+            throw std::runtime_error("unknown location directive: " +
+                                     directive);
         }
     }
     _expect("}");

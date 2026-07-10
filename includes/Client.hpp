@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 00:02:05 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/07 16:16:44 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 03:49:39 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <ostream>
 #include <string>
 
+#include "CgiHandler.hpp"
 #include "HttpRequest.hpp"
 
 class Client
@@ -31,10 +32,17 @@ public:
     HttpRequest const& getRequest() const;
     std::string const& getResponse() const;
     size_t getSentBytes() const;
+    CgiProcess const& getCgi() const;
+    CgiProcess& getCgi();
+    std::string const& getCgiOutput() const;
+    bool hasCgi() const;
 
     void appendRequest(char const* buf, size_t n);
     void setResponse(std::string const& response);
     void addSentBytes(size_t n);
+    void setCgi(CgiProcess const& cgi);
+    void appendCgiOutput(char const* buf, size_t n);
+    void clearCgi();
 
 private:
     Client(Client const& other);
@@ -46,6 +54,9 @@ private:
     std::string _ip;
     int _port;
     size_t _sent_bytes;
+    CgiProcess _cgi;
+    std::string _cgi_output;
+    bool _has_cgi;
 };
 
 std::ostream& operator<<(std::ostream& os, Client const& client);
