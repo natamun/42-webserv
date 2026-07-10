@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 16:26:47 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/10 02:23:06 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 03:28:07 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,9 @@ public:
     std::map<std::string, std::string> const& getHeaders() const;
     std::string const& getHeader(std::string const& key) const;
     std::string const& getError() const;
+    std::string getPath() const;
+    std::string getQueryString() const;
+    std::string getExtension() const;
 
 private:
     State _state;

@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 16:57:02 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/10 02:23:04 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/10 03:28:06 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -217,6 +217,32 @@ std::string const& HttpRequest::getHeader(std::string const& key) const
 std::string const& HttpRequest::getError() const
 {
     return _error;
+}
+
+std::string HttpRequest::getPath() const
+{
+    size_t q = _uri.find('?');
+    return _uri.substr(0, q);
+}
+
+std::string HttpRequest::getQueryString() const
+{
+    size_t q = _uri.find('?');
+    if (q == std::string::npos)
+        return "";
+    return _uri.substr(q + 1);
+}
+
+std::string HttpRequest::getExtension() const
+{
+    std::string path = getPath();
+    size_t slash = path.rfind('/');
+    size_t dot = path.rfind('.');
+    if (dot == std::string::npos)
+        return "";
+    if (slash != std::string::npos && dot < slash)
+        return "";
+    return path.substr(dot);
 }
 
 std::ostream& operator<<(std::ostream& os, HttpRequest const& req)
