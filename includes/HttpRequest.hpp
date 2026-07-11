@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 16:26:47 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/10 03:28:07 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 21:46:02 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ public:
     ~HttpRequest();
 
     void appendData(char const* buf, size_t len);
+    void checkBodyLimit(size_t maxBodySize);
     bool isComplete() const;
     bool hasError() const;
 
@@ -45,6 +46,8 @@ public:
     std::map<std::string, std::string> const& getHeaders() const;
     std::string const& getHeader(std::string const& key) const;
     std::string const& getError() const;
+    int getErrorStatus() const;
+    size_t getContentLength() const;
     std::string getPath() const;
     std::string getQueryString() const;
     std::string getExtension() const;
@@ -58,13 +61,14 @@ private:
     std::map<std::string, std::string> _headers;
     std::string _body;
     std::string _error;
+    int _errorStatus;
     size_t _contentLength;
 
     void _tryParseRequestLine();
     void _tryParseHeaders();
     void _tryParseBody();
     void _tryParseChunkedBody();
-    void _fail(std::string const& reason);
+    void _fail(std::string const& reason, int status = 400);
 };
 
 std::ostream& operator<<(std::ostream& os, HttpRequest const& req);

@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 16:57:02 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/10 03:28:06 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 21:46:06 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,10 @@
 #include <sstream>
 #include <string>
 
-HttpRequest::HttpRequest() : _state(PARSING_REQUEST_LINE), _contentLength(0) {}
+HttpRequest::HttpRequest()
+    : _state(PARSING_REQUEST_LINE), _errorStatus(400), _contentLength(0)
+{
+}
 
 HttpRequest::~HttpRequest() {}
 
@@ -167,10 +170,17 @@ void HttpRequest::_tryParseBody()
     _state = COMPLETE;
 }
 
-void HttpRequest::_fail(std::string const& reason)
+void HttpRequest::_fail(std::string const& reason, int status)
 {
     _state = ERROR;
     _error = reason;
+    _errorStatus = status;
+}
+
+void HttpRequest::checkBodyLimit(size_t maxBodySize)
+{
+    if (_contentLength > maxBodySize)
+        _fail("Body exceeds client_max_body_size", 413);
 }
 
 bool HttpRequest::isComplete() const
@@ -217,6 +227,16 @@ std::string const& HttpRequest::getHeader(std::string const& key) const
 std::string const& HttpRequest::getError() const
 {
     return _error;
+}
+
+int HttpRequest::getErrorStatus() const
+{
+    return _errorStatus;
+}
+
+size_t HttpRequest::getContentLength() const
+{
+    return _contentLength;
 }
 
 std::string HttpRequest::getPath() const

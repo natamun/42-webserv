@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 00:02:05 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/10 03:49:39 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 21:46:00 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,7 @@ public:
     bool hasCgi() const;
 
     void appendRequest(char const* buf, size_t n);
+    void checkBodyLimit(size_t maxBodySize);
     void setResponse(std::string const& response);
     void addSentBytes(size_t n);
     void setCgi(CgiProcess const& cgi);

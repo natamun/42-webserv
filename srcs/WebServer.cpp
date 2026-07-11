@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 20:47:50 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 21:46:08 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -328,7 +328,17 @@ void WebServer::_readClient(int client_fd)
     Client* client = _clients[client_fd];
     client->appendRequest(buf, n);
 
-    if (client->getRequest().isComplete())
+    HttpRequest const& request = client->getRequest();
+    if (!request.isComplete() && !request.hasError() &&
+        request.getContentLength() > 0)
+    {
+        Server const& server =
+            _findServer(request.getHeader("host"), client_fd);
+        client->checkBodyLimit(
+            static_cast<size_t>(server.client_max_body_size));
+    }
+
+    if (request.isComplete() || request.hasError())
         _handleRequest(client_fd);
 }
 
@@ -345,7 +355,7 @@ void WebServer::_handleRequest(int client_fd)
     {
         std::cerr << "[error] " << _clients[client_fd]->getIp()
                   << " request failed: " << request.getError() << std::endl;
-        response.setStatus(400);
+        response.setStatus(request.getErrorStatus());
         response.buildDefaultErrorBody();
         client->setResponse(response.build());
         _setPollEvent(client_fd, POLLOUT);

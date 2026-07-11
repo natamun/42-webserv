@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 00:00:00 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/10 03:49:37 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 21:46:04 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,6 +54,11 @@ size_t Client::getSentBytes() const
 void Client::appendRequest(char const* buf, size_t n)
 {
     _request.appendData(buf, n);
+}
+
+void Client::checkBodyLimit(size_t maxBodySize)
+{
+    _request.checkBodyLimit(maxBodySize);
 }
 
 void Client::setResponse(std::string const& response)
