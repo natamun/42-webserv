@@ -147,24 +147,19 @@ void handleGet(std::string const& path,
                 filePath = indexPath;
                 autoIndex = true;
             }
-            if (!autoIndex)
+        }
+        if (!autoIndex)
+        {
+            if (loc.autoindex)
             {
-                if (loc.autoindex)
-                {
-                    std::cerr
-                        << "[DEBUG] generateAutoIndex called with dirPath="
-                        << filePath << " uri=" << path << std::endl;
-                    std::string all = generateAutoIndex(filePath, path);
-                    std::cerr << "[DEBUG] generated HTML length: " << all.size()
-                              << std::endl;
-                    res.setStatus(200);
-                    res.setHeader("Content-Type", "text/html");
-                    res.setBody(all);
-                    return;
-                }
-                res.setStatus(403);
+                std::string all = generateAutoIndex(filePath, path);
+                res.setStatus(200);
+                res.setHeader("Content-Type", "text/html");
+                res.setBody(all);
                 return;
             }
+            res.setStatus(403);
+            return;
         }
     }
 
