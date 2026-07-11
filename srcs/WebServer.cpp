@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 19:30:17 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 19:38:54 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@
 WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
 {
     signal(SIGCHLD, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
     for (size_t i = 0; i < _servers.size(); ++i)
     {
         int fd = socket(AF_INET, SOCK_STREAM, 0);
