@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 16:57:02 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/11 21:46:06 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 22:36:26 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,7 +142,15 @@ void HttpRequest::_tryParseChunkedBody()
         if (crlf == std::string::npos)
             return;
 
-        size_t chunk_size = strtoul(_buffer.substr(0, crlf).c_str(), NULL, 16);
+        std::string size_str = _buffer.substr(0, crlf);
+        char* endptr = NULL;
+        size_t chunk_size = strtoul(size_str.c_str(), &endptr, 16);
+
+        if (size_str.empty() || endptr != size_str.c_str() + size_str.size())
+        {
+            _fail("Invalid chunk size");
+            return;
+        }
 
         if (_buffer.size() < crlf + 2 + chunk_size + 2)
             return;
