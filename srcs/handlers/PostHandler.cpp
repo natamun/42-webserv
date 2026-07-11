@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 18:33:46 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 17:54:46 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 18:21:54 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,11 @@ void handlePost(std::string const& path,
     }
 
     std::string filename = path.substr(loc.path.size());
+    if (filename.find("..") != std::string::npos)
+    {
+        res.setStatus(403);
+        return;
+    }
     if (filename.empty() || filename == "/")
     {
         std::ostringstream oss;
