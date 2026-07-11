@@ -367,6 +367,13 @@ void WebServer::_handleMethod(int client_fd,
         return;
     }
 
+    if (!loc->redirect.empty())
+    {
+        response.setStatus(301);
+        response.setHeader("Location", loc->redirect);
+        return;
+    }
+
     std::string const method = request.getMethod();
 
     if (_isCgi(request, *loc))
