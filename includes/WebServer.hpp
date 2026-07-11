@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 20:47:53 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 22:10:07 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,6 +87,11 @@ private:
     void _removeCgiPipe(int cgi_fd);
     void _readCgiOutput(int cgi_fd);
     void _writeCgiBody(int cgi_fd);
+    void _checkCgiTimeouts();
+    void _killCgi(int client_fd);
+
+    static const int CGI_TIMEOUT_SECONDS = 5;
+    static const int POLL_TIMEOUT_MS = 1000;
 
     std::vector<Server> _servers;
     std::vector<int> _sockets;

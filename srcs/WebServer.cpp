@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 21:46:08 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 22:11:09 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 #include <cerrno>
 #include <csignal>
 #include <cstring>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -100,7 +101,7 @@ void WebServer::run()
 
     while (true)
     {
-        if (poll(&_pollfds[0], _pollfds.size(), -1) == -1)
+        if (poll(&_pollfds[0], _pollfds.size(), POLL_TIMEOUT_MS) == -1)
         {
             if (errno == EINTR)
                 continue;
@@ -140,6 +141,8 @@ void WebServer::run()
             if (_pollfds.size() < prev_size)
                 --i;
         }
+
+        _checkCgiTimeouts();
     }
 }
 
@@ -582,6 +585,48 @@ void WebServer::_writeCgiBody(int cgi_fd)
     client->getCgi().body_sent += n;
     if (client->getCgi().body_sent >= body.size())
         _removeCgiPipe(cgi_fd);
+}
+
+void WebServer::_checkCgiTimeouts()
+{
+    time_t now = time(NULL);
+    std::vector<int> timed_out;
+
+    std::map<int, Client*>::iterator it;
+    for (it = _clients.begin(); it != _clients.end(); ++it)
+    {
+        Client* client = it->second;
+        if (client->hasCgi() &&
+            now - client->getCgi().started > CGI_TIMEOUT_SECONDS)
+            timed_out.push_back(it->first);
+    }
+
+    for (size_t i = 0; i < timed_out.size(); ++i)
+        _killCgi(timed_out[i]);
+}
+
+void WebServer::_killCgi(int client_fd)
+{
+    Client* client = _clients[client_fd];
+    CgiProcess const& proc = client->getCgi();
+
+    std::cerr << "[error] " << client->getIp() << " cgi timed out, killing pid "
+              << proc.pid << std::endl;
+    kill(proc.pid, SIGKILL);
+
+    if (_pipe_to_client.count(proc.pipe_in))
+        _removeCgiPipe(proc.pipe_in);
+    if (_pipe_to_client.count(proc.pipe_out))
+        _removeCgiPipe(proc.pipe_out);
+
+    HttpResponse response;
+    response.setVersion(client->getRequest().getVersion());
+    response.setStatus(504);
+
+    Server const& server =
+        _findServer(client->getRequest().getHeader("host"), client_fd);
+    client->clearCgi();
+    _finalizeResponse(client_fd, response, server);
 }
 
 std::ostream& operator<<(std::ostream& os, WebServer const& ws)

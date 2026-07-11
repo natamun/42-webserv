@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 01:02:49 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/10 03:30:33 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 22:11:00 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -146,6 +147,7 @@ CgiProcess spawnCgi(HttpRequest const& request, Location const& loc)
     proc.pid = pid;
     proc.pipe_in = pipe_in[1];
     proc.pipe_out = pipe_out[0];
+    proc.started = time(NULL);
     return proc;
 }
 
