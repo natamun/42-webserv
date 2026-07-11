@@ -27,7 +27,6 @@ OBJ			= $(addprefix $(OBJ_DIR)/, $(SRCS_FILES:.cpp=.o)) \
 			  $(addprefix $(OBJ_DIR)/handlers/, $(HANDLER_FILES:.cpp=.o))
 
 TEST_NAME		= webserv_test
-CONF			?=
 SRC_NO_MAIN		= $(filter-out $(SRCS_DIR)/main.cpp, $(SRCS))
 
 CXXFLAGS 	+= -I $(HEADER_DIR)
@@ -65,11 +64,11 @@ debug: re
 
 re: fclean all
 
-# Usage: make test FILE=tests/test_name.cpp CONF=tests/file.conf
+# Usage: make test FILE=tests/test_name.cpp
 test:
 	@echo "$(Y)--- Compiling test: $(FILE) ---$(RES)"
 	@$(CXX) $(CXXFLAGS) $(SRC_NO_MAIN) $(FILE) -o $(TEST_NAME)
 	@echo "$(G)✅ $(TEST_NAME) created!$(RES)"
-	@./$(TEST_NAME) $(CONF)
+	@./$(TEST_NAME)
 
 .PHONY: all clean fclean re debug test
