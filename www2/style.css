@@ -1,0 +1,131 @@
+:root {
+    --bg: #0f1115;
+    --surface: #171a21;
+    --border: #2a2e37;
+    --text: #e8e9ec;
+    --text-muted: #9aa0ac;
+    --accent: #5b8cff;
+    --accent-hover: #7ba0ff;
+    --radius: 10px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    max-width: 720px;
+    margin: 60px auto;
+    padding: 0 24px;
+    line-height: 1.6;
+}
+
+h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+}
+
+h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-top: 40px;
+    margin-bottom: 12px;
+    color: var(--text);
+}
+
+p {
+    color: var(--text-muted);
+}
+
+nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+nav a:hover {
+    background: var(--surface);
+    color: var(--text);
+}
+
+form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-top: 12px;
+}
+
+label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 8px;
+}
+
+input[type="file"] {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+input[type="submit"] {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 8px 20px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+input[type="submit"]:hover {
+    background: var(--accent-hover);
+}
+
+img {
+    display: block;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+ul li {
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+ul li a {
+    color: var(--text);
+    text-decoration: none;
+}
+
+ul li a:hover {
+    color: var(--accent);
+}

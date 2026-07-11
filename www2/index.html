@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webserv</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <h1>Bienvenue sur mon webserv (DUPLICATION DU SITE)</h1>
+    <nav>
+        <a href="/">Accueil</a>
+        <a href="/about.html">A propos</a>
+    </nav>
+
+    <h2>Test d'upload</h2>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <label for="file">Choisir un fichier :</label><br>
+        <input type="file" id="file" name="file" accept="image/*">
+        <br>
+        <input type="submit" value="Envoyer">
+    </form>
+
+    <h2>Galerie d'images</h2>
+    <a href="/images/">
+        <button type="button">Voir toutes les images</button>
+    </a>
+</body>
+
+</html>
