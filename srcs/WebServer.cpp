@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 17:54:43 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 19:30:17 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,28 +109,35 @@ void WebServer::run()
         for (size_t i = 0; i < _pollfds.size(); ++i)
         {
             int fd = _pollfds[i].fd;
-            if (_pollfds[i].revents & (POLLIN | POLLHUP))
+            short revents = _pollfds[i].revents;
+            size_t prev_size = _pollfds.size();
+
+            if (revents & (POLLERR | POLLNVAL))
             {
-                size_t prev_size = _pollfds.size();
+                if (_pipe_to_client.count(fd))
+                    _removeCgiPipe(fd);
+                else if (!_isListeningSocket(fd))
+                    _removeClient(fd);
+            }
+            else if (revents & (POLLIN | POLLHUP))
+            {
                 if (_isListeningSocket(fd))
                     _acceptClient(fd);
                 else if (_pipe_to_client.count(fd))
                     _readCgiOutput(fd);
                 else
                     _readClient(fd);
-                if (_pollfds.size() < prev_size)
-                    --i;
             }
-            else if (_pollfds[i].revents & POLLOUT)
+            else if (revents & POLLOUT)
             {
-                size_t prev_size = _pollfds.size();
                 if (_pipe_to_client.count(fd))
                     _writeCgiBody(fd);
                 else
                     _sendResponse(fd);
-                if (_pollfds.size() < prev_size)
-                    --i;
             }
+
+            if (_pollfds.size() < prev_size)
+                --i;
         }
     }
 }
@@ -514,6 +521,9 @@ void WebServer::_readCgiOutput(int cgi_fd)
                       << std::endl;
             response.setStatus(502);
         }
+
+        if (_pipe_to_client.count(client->getCgi().pipe_in))
+            _removeCgiPipe(client->getCgi().pipe_in);
 
         Server const& server =
             _findServer(client->getRequest().getHeader("host"));
