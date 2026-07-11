@@ -41,7 +41,6 @@ void handlePost(std::string const& path,
     }
     if (loc.upload_path.empty())
     {
-        std::cerr << "[DEBUG] upload_path is empty!" << std::endl;
         res.setStatus(500);
         return;
     }
@@ -60,8 +59,6 @@ void handlePost(std::string const& path,
                           std::ios::out | std::ios::binary | std::ios::trunc);
     if (!outFile.is_open())
     {
-        std::cerr << "[DEBUG] cannot open file: " << filePath << " - "
-                  << strerror(errno);
         res.setStatus(500);
         return;
     }
