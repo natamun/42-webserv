@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <fstream>
 #include <iostream>
@@ -123,7 +124,6 @@ void handleGet(std::string const& path,
     }
 
     std::string filePath = loc.root + path;
-    std::cerr << "[DEBUG] cwd-relative filePath: " << filePath << std::endl;
 
     struct stat st;
     if (stat(filePath.c_str(), &st) != 0)
