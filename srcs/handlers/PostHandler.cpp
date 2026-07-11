@@ -10,6 +10,11 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
 #include "Handlers.hpp"
 
 void handlePost(std::string const& path,
@@ -18,9 +23,50 @@ void handlePost(std::string const& path,
                 Location const& loc,
                 HttpResponse& res)
 {
-    (void)path;
-    (void)body;
-    (void)server;
-    (void)loc;
-    res.setStatus(501);
+    bool postAllowed = false;
+    for (size_t i = 0; i < loc.methods.size(); ++i)
+    {
+        if (loc.methods[i] == "POST")
+            postAllowed = true;
+    }
+    if (!postAllowed)
+    {
+        res.setStatus(405);
+        return;
+    }
+    if ((int)body.size() > server.client_max_body_size)
+    {
+        res.setStatus(413);
+        return;
+    }
+    if (loc.upload_path.empty())
+    {
+        res.setStatus(500);
+        return;
+    }
+
+    std::string filename = path.substr(loc.path.size());
+    if (filename.empty() || filename == "/")
+    {
+        std::ostringstream oss;
+        oss << time(NULL);
+        filename = "/upload_" + oss.str();
+    }
+
+    std::string filePath = loc.upload_path + filename;
+
+    std::ofstream outFile(filePath.c_str(),
+                          std::ios::out | std::ios::binary | std::ios::trunc);
+    if (!outFile.is_open())
+    {
+        res.setStatus(500);
+        return;
+    }
+
+    outFile << body;
+    outFile.close();
+
+    res.setStatus(201);
+    res.setHeader("Content-Type", "text/html");
+    res.setBody("<h1> 201 Created</h1><p>File uploaded: " + filename + "</p>");
 }
