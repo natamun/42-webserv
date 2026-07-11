@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/10 03:52:17 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 17:54:43 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -223,13 +223,13 @@ Server const& WebServer::_findServer(std::string const& host) const
     return _servers[0];
 }
 
-Location const* WebServer::_findLocation(std::string const& uri,
+Location const* WebServer::_findLocation(std::string const& path,
                                          Server const& server) const
 {
     Location const* best = NULL;
     for (size_t i = 0; i < server.locations.size(); ++i)
     {
-        if (uri.find(server.locations[i].path) == 0)
+        if (path.find(server.locations[i].path) == 0)
         {
             if (!best || server.locations[i].path.size() > best->path.size())
                 best = &server.locations[i];
@@ -358,8 +358,8 @@ void WebServer::_handleMethod(int client_fd,
                               Server const& server,
                               HttpResponse& response)
 {
-    std::string const uri = request.getUri();
-    Location const* loc = _findLocation(uri, server);
+    std::string const path = request.getPath();
+    Location const* loc = _findLocation(path, server);
 
     if (loc == NULL)
     {
@@ -372,14 +372,14 @@ void WebServer::_handleMethod(int client_fd,
     if (_isCgi(request, *loc))
         _handleCgi(client_fd, request, *loc, response);
     else if (method == "GET")
-        handleGet(uri, server, *loc, response);
+        handleGet(path, *loc, response);
     else if (method == "POST")
     {
         std::string body = request.getBody();
-        handlePost(uri, body, server, *loc, response);
+        handlePost(path, body, *loc, response);
     }
     else if (method == "DELETE")
-        handleDelete(uri, server, *loc, response);
+        handleDelete(path, *loc, response);
     else
         response.setStatus(405);
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   GetHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dufama <dufama@student.42lausanne.ch>      +#+  +:+       +#+        */
+/*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/10 10:13:21 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/10 10:13:21 by dufama           ###   ########.fr       */
+/*   Updated: 2026/07/11 17:54:48 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,12 +105,8 @@ static std::string generateAutoIndex(std::string const& dirPath,
     return html.str();
 }
 
-void handleGet(std::string const& path,
-               Server const& server,
-               Location const& loc,
-               HttpResponse& res)
+void handleGet(std::string const& path, Location const& loc, HttpResponse& res)
 {
-    (void)server;
     bool getAllowed = false;
     for (size_t i = 0; i < loc.methods.size(); ++i)
     {

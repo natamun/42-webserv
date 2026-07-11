@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 18:33:42 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 02:09:51 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 17:54:50 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,12 +18,9 @@
 #include "Handlers.hpp"
 
 void handleDelete(std::string const& path,
-                  Server const& server,
                   Location const& loc,
                   HttpResponse& res)
 {
-    (void)server;
-
     bool deleteAllowed = false;
     for (size_t i = 0; i < loc.methods.size(); ++i)
     {
