@@ -6,11 +6,12 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 18:33:46 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 18:21:54 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 18:23:02 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstring>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <sstream>
