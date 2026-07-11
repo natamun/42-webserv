@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 22:11:09 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 22:25:57 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -478,10 +478,14 @@ void WebServer::_sendResponse(int client_fd)
     ssize_t n =
         send(client_fd, response.c_str() + sent, response.size() - sent, 0);
 
-    if (n == -1)
+    if (n <= 0)
     {
-        std::cerr << "[error] " << client->getIp()
-                  << " send failed: " << strerror(errno) << std::endl;
+        if (n == 0)
+            std::cout << "[info] client disconnected: " << client->getIp()
+                      << std::endl;
+        else
+            std::cerr << "[error] " << client->getIp()
+                      << " send failed: " << strerror(errno) << std::endl;
         _removeClient(client_fd);
         return;
     }
@@ -546,8 +550,8 @@ void WebServer::_readCgiOutput(int cgi_fd)
         }
         else
         {
-            std::cerr << "[error] cgi read failed: " << client->getIp()
-                      << std::endl;
+            std::cerr << "[error] cgi read failed: " << client->getIp() << ": "
+                      << strerror(errno) << std::endl;
             response.setStatus(502);
         }
 
@@ -574,10 +578,14 @@ void WebServer::_writeCgiBody(int cgi_fd)
 
     ssize_t n = write(cgi_fd, body.c_str() + sent, body.size() - sent);
 
-    if (n == -1)
+    if (n <= 0)
     {
-        std::cerr << "[error] " << client->getIp()
-                  << " cgi write failed: " << strerror(errno) << std::endl;
+        if (n == 0)
+            std::cout << "[info] cgi pipe closed: " << client->getIp()
+                      << std::endl;
+        else
+            std::cerr << "[error] " << client->getIp()
+                      << " cgi write failed: " << strerror(errno) << std::endl;
         _removeCgiPipe(cgi_fd);
         return;
     }
