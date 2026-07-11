@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/10 10:13:21 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/11 19:51:12 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 21:56:12 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,7 +125,11 @@ void handleGet(std::string const& path, Location const& loc, HttpResponse& res)
         return;
     }
 
-    std::string filePath = loc.root + path;
+    std::string relative = path.substr(loc.path.size());
+    if (relative.empty() || relative[0] != '/')
+        relative = "/" + relative;
+
+    std::string filePath = loc.root + relative;
 
     struct stat st;
     if (stat(filePath.c_str(), &st) != 0)
