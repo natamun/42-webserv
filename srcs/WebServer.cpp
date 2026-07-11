@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 22:25:57 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 22:41:10 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -298,7 +298,7 @@ void WebServer::_acceptClient(int listening_fd)
                                 inet_ntoa(client_addr.sin_addr),
                                 ntohs(client_addr.sin_port));
     _clients[client_fd] = client;
-    std::cout << *client << " has been accepted \n" << std::endl;
+    std::cout << *client << " has been accepted" << std::endl;
 
     if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
     {
@@ -350,8 +350,8 @@ void WebServer::_handleRequest(int client_fd)
     Client* client = _clients[client_fd];
     HttpRequest const& request = client->getRequest();
 
-    std::cout << "[fd=" << client_fd << "] request complete:\n";
-    std::cout << client->getRequest() << std::endl;
+    std::cout << "[fd=" << client_fd << "] request complete" << std::endl;
+    // std::cout << client->getRequest() << std::endl;
 
     HttpResponse response;
     if (request.hasError())
@@ -464,8 +464,8 @@ void WebServer::_finalizeResponse(int client_fd,
     Client* client = _clients[client_fd];
     _handleError(response, server, client->getIp());
     client->setResponse(response.build());
-    std::cout << "[fd=" << client_fd << "] response complete:\n";
-    std::cout << client->getResponse() << std::endl;
+    std::cout << "[fd=" << client_fd << "] response complete" << std::endl;
+    // std::cout << client->getResponse() << std::endl;
     _setPollEvent(client_fd, POLLOUT);
 }
 
