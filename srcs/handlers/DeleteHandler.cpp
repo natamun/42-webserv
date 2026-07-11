@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 18:33:42 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 17:54:50 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 19:51:13 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,12 @@ void handleDelete(std::string const& path,
     if (!deleteAllowed)
     {
         res.setStatus(405);
+        return;
+    }
+
+    if (path.find("..") != std::string::npos)
+    {
+        res.setStatus(403);
         return;
     }
 

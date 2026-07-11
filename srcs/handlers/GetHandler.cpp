@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/10 10:13:21 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/11 17:54:48 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 19:51:12 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,6 +116,12 @@ void handleGet(std::string const& path, Location const& loc, HttpResponse& res)
     if (!getAllowed)
     {
         res.setStatus(405);
+        return;
+    }
+
+    if (path.find("..") != std::string::npos)
+    {
+        res.setStatus(403);
         return;
     }
 
