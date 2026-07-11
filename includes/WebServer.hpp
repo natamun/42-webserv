@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/10 03:34:02 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 20:47:53 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ private:
     void _closeClients();
 
     // routing
-    Server const& _findServer(std::string const& host) const;
+    Server const& _findServer(std::string const& host, int client_fd) const;
     Location const* _findLocation(std::string const& uri,
                                   Server const& server) const;
     bool _isCgi(HttpRequest const& request, Location const& loc) const;

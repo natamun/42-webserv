@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 19:38:54 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 20:47:50 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -222,13 +222,28 @@ void WebServer::_closeClients()
     _clients.clear();
 }
 
-Server const& WebServer::_findServer(std::string const& host) const
+Server const& WebServer::_findServer(std::string const& host,
+                                     int client_fd) const
 {
+    struct sockaddr_in local_addr;
+    socklen_t len = sizeof(local_addr);
+    int real_port = -1;
+
+    if (getsockname(client_fd, (struct sockaddr*)&local_addr, &len) == 0)
+        real_port = ntohs(local_addr.sin_port);
+
     std::string hostname = host.substr(0, host.find(":"));
+    Server const* fallback = &_servers[0];
+
     for (size_t i = 0; i < _servers.size(); ++i)
+    {
+        if (_servers[i].port != real_port)
+            continue;
         if (_servers[i].server_name == hostname)
             return _servers[i];
-    return _servers[0];
+        fallback = &_servers[i];
+    }
+    return *fallback;
 }
 
 Location const* WebServer::_findLocation(std::string const& path,
@@ -337,7 +352,7 @@ void WebServer::_handleRequest(int client_fd)
         return;
     }
 
-    Server const& server = _findServer(request.getHeader("host"));
+    Server const& server = _findServer(request.getHeader("host"), client_fd);
 
     response.setVersion(request.getVersion());
 
@@ -527,7 +542,7 @@ void WebServer::_readCgiOutput(int cgi_fd)
             _removeCgiPipe(client->getCgi().pipe_in);
 
         Server const& server =
-            _findServer(client->getRequest().getHeader("host"));
+            _findServer(client->getRequest().getHeader("host"), client_fd);
         client->clearCgi();
         _finalizeResponse(client_fd, response, server);
 
