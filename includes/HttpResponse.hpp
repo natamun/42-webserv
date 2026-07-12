@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 15:39:25 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/07 16:33:18 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:41:59 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,10 +16,6 @@
 #include <map>
 #include <string>
 
-// HTTP/1.1 {_status} {_statusMessage()}\r\n
-// {_headers[key]}: {_headers[value]}\r\n  (repeated for each header)
-// \r\n
-// {_body}
 class HttpResponse
 {
 public:
@@ -32,11 +28,10 @@ public:
     void setVersion(std::string const& version);
     void setHeader(std::string const& key, std::string const& value);
     void setBody(std::string const& body);
-
-    int getStatus() const;
     void buildDefaultErrorBody();
 
     std::string build() const;
+    int getStatus() const;
 
 private:
     std::string _statusMessage() const;

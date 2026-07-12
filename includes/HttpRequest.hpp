@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 16:26:47 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/12 17:12:20 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:40:47 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,9 +36,9 @@ public:
 
     void appendData(char const* buf, size_t len);
     void checkBodyLimit(size_t maxBodySize);
+
     bool isComplete() const;
     bool hasError() const;
-
     std::string const& getMethod() const;
     std::string const& getUri() const;
     std::string const& getVersion() const;

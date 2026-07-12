@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 15:39:29 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 22:11:05 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:42:01 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,14 +41,14 @@ HttpResponse& HttpResponse::operator=(HttpResponse const& other)
     return *this;
 }
 
-void HttpResponse::setVersion(std::string const& version)
-{
-    _version = version;
-}
-
 void HttpResponse::setStatus(int code)
 {
     _status = code;
+}
+
+void HttpResponse::setVersion(std::string const& version)
+{
+    _version = version;
 }
 
 void HttpResponse::setHeader(std::string const& key, std::string const& value)
@@ -62,11 +62,6 @@ void HttpResponse::setBody(std::string const& body)
     std::ostringstream oss;
     oss << body.size();
     _headers["Content-Length"] = oss.str();
-}
-
-int HttpResponse::getStatus() const
-{
-    return _status;
 }
 
 void HttpResponse::buildDefaultErrorBody()
@@ -92,6 +87,11 @@ std::string HttpResponse::build() const
 
     oss << "\r\n" << _body;
     return oss.str();
+}
+
+int HttpResponse::getStatus() const
+{
+    return _status;
 }
 
 std::string HttpResponse::_statusMessage() const
