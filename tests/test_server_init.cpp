@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:52:32 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/02 20:07:38 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 16:57:30 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,8 +28,8 @@ int main(void)
     loc2.root = "./www/upload";
     loc2.autoindex = true;
     loc2.upload_path = "./www/upload";
-    loc2.methods.push_back("GET");
-    loc2.methods.push_back("POST");
+    loc2.methods.insert("GET");
+    loc2.methods.insert("POST");
 
     Server srv;
     srv.host = "127.0.0.1";
