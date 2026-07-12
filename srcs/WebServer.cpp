@@ -6,14 +6,14 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/12 17:56:16 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 19:02:08 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "WebServer.hpp"
 
-#include <arpa/inet.h>
 #include <fcntl.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -26,6 +26,7 @@
 #include <iostream>
 #include <map>
 #include <set>
+#include <sstream>
 
 #include "CgiHandler.hpp"
 #include "Handlers.hpp"
@@ -40,36 +41,54 @@ WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
     signal(SIGPIPE, SIG_IGN);
     for (size_t i = 0; i < _servers.size(); ++i)
     {
-        int fd = socket(AF_INET, SOCK_STREAM, 0);
+        struct addrinfo hints;
+        std::memset(&hints, 0, sizeof(hints));
+        hints.ai_family = AF_INET;
+        hints.ai_socktype = SOCK_STREAM;
+        hints.ai_flags = AI_NUMERICHOST;
+
+        std::ostringstream portStr;
+        portStr << _servers[i].port;
+
+        struct addrinfo* res = NULL;
+        int gaiErr = getaddrinfo(
+            _servers[i].host.c_str(), portStr.str().c_str(), &hints, &res);
+        if (gaiErr != 0)
+        {
+            _closeSockets();
+            throw WebServerException(
+                "getaddrinfo", _servers[i].host, _servers[i].port, gaiErr);
+        }
+
+        int fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
         if (fd == -1)
         {
+            freeaddrinfo(res);
             _closeSockets();
             throw WebServerException(
                 "socket", _servers[i].host, _servers[i].port);
         }
 
-        struct sockaddr_in addr;
-        std::memset(&addr, 0, sizeof(addr));
-        addr.sin_family = AF_INET;
-        addr.sin_port = htons(_servers[i].port);
-        addr.sin_addr.s_addr = inet_addr(_servers[i].host.c_str());
-
         int opt = 1;
         if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
         {
             close(fd);
+            freeaddrinfo(res);
             _closeSockets();
             throw WebServerException(
                 "setsockopt", _servers[i].host, _servers[i].port);
         }
 
-        if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1)
+        if (bind(fd, res->ai_addr, res->ai_addrlen) == -1)
         {
             close(fd);
+            freeaddrinfo(res);
             _closeSockets();
             throw WebServerException(
                 "bind", _servers[i].host, _servers[i].port);
         }
+
+        freeaddrinfo(res);
 
         if (listen(fd, SOMAXCONN) == -1)
         {
@@ -235,6 +254,15 @@ bool WebServer::_isListeningSocket(int listening_fd) const
     return false;
 }
 
+static std::string ipToString(struct in_addr addr)
+{
+    unsigned long hostOrder = ntohl(addr.s_addr);
+    std::ostringstream oss;
+    oss << ((hostOrder >> 24) & 0xFF) << "." << ((hostOrder >> 16) & 0xFF)
+        << "." << ((hostOrder >> 8) & 0xFF) << "." << (hostOrder & 0xFF);
+    return oss.str();
+}
+
 void WebServer::_acceptClient(int listening_fd)
 {
     struct sockaddr_in client_addr;
@@ -248,7 +276,7 @@ void WebServer::_acceptClient(int listening_fd)
     }
 
     Client* client = new Client(client_fd,
-                                inet_ntoa(client_addr.sin_addr),
+                                ipToString(client_addr.sin_addr),
                                 ntohs(client_addr.sin_port));
     _clients[client_fd] = client;
     std::cout << *client << " has been accepted" << std::endl;
