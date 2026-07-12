@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 18:33:42 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 02:09:51 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 21:56:14 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,12 +18,9 @@
 #include "Handlers.hpp"
 
 void handleDelete(std::string const& path,
-                  Server const& server,
                   Location const& loc,
                   HttpResponse& res)
 {
-    (void)server;
-
     bool deleteAllowed = false;
     for (size_t i = 0; i < loc.methods.size(); ++i)
     {
@@ -36,7 +33,17 @@ void handleDelete(std::string const& path,
         return;
     }
 
-    std::string filePath = loc.root + path;
+    if (path.find("..") != std::string::npos)
+    {
+        res.setStatus(403);
+        return;
+    }
+
+    std::string relative = path.substr(loc.path.size());
+    if (relative.empty() || relative[0] != '/')
+        relative = "/" + relative;
+
+    std::string filePath = loc.root + relative;
 
     struct stat st;
     if (stat(filePath.c_str(), &st) != 0)

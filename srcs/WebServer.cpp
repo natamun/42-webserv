@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/10 03:52:17 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 22:41:10 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 #include <cerrno>
 #include <csignal>
 #include <cstring>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -34,6 +35,7 @@
 WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
 {
     signal(SIGCHLD, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
     for (size_t i = 0; i < _servers.size(); ++i)
     {
         int fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -99,7 +101,7 @@ void WebServer::run()
 
     while (true)
     {
-        if (poll(&_pollfds[0], _pollfds.size(), -1) == -1)
+        if (poll(&_pollfds[0], _pollfds.size(), POLL_TIMEOUT_MS) == -1)
         {
             if (errno == EINTR)
                 continue;
@@ -109,29 +111,38 @@ void WebServer::run()
         for (size_t i = 0; i < _pollfds.size(); ++i)
         {
             int fd = _pollfds[i].fd;
-            if (_pollfds[i].revents & (POLLIN | POLLHUP))
+            short revents = _pollfds[i].revents;
+            size_t prev_size = _pollfds.size();
+
+            if (revents & (POLLERR | POLLNVAL))
             {
-                size_t prev_size = _pollfds.size();
+                if (_pipe_to_client.count(fd))
+                    _removeCgiPipe(fd);
+                else if (!_isListeningSocket(fd))
+                    _removeClient(fd);
+            }
+            else if (revents & (POLLIN | POLLHUP))
+            {
                 if (_isListeningSocket(fd))
                     _acceptClient(fd);
                 else if (_pipe_to_client.count(fd))
                     _readCgiOutput(fd);
                 else
                     _readClient(fd);
-                if (_pollfds.size() < prev_size)
-                    --i;
             }
-            else if (_pollfds[i].revents & POLLOUT)
+            else if (revents & POLLOUT)
             {
-                size_t prev_size = _pollfds.size();
                 if (_pipe_to_client.count(fd))
                     _writeCgiBody(fd);
                 else
                     _sendResponse(fd);
-                if (_pollfds.size() < prev_size)
-                    --i;
             }
+
+            if (_pollfds.size() < prev_size)
+                --i;
         }
+
+        _checkCgiTimeouts();
     }
 }
 
@@ -214,22 +225,37 @@ void WebServer::_closeClients()
     _clients.clear();
 }
 
-Server const& WebServer::_findServer(std::string const& host) const
+Server const& WebServer::_findServer(std::string const& host,
+                                     int client_fd) const
 {
+    struct sockaddr_in local_addr;
+    socklen_t len = sizeof(local_addr);
+    int real_port = -1;
+
+    if (getsockname(client_fd, (struct sockaddr*)&local_addr, &len) == 0)
+        real_port = ntohs(local_addr.sin_port);
+
     std::string hostname = host.substr(0, host.find(":"));
+    Server const* fallback = &_servers[0];
+
     for (size_t i = 0; i < _servers.size(); ++i)
+    {
+        if (_servers[i].port != real_port)
+            continue;
         if (_servers[i].server_name == hostname)
             return _servers[i];
-    return _servers[0];
+        fallback = &_servers[i];
+    }
+    return *fallback;
 }
 
-Location const* WebServer::_findLocation(std::string const& uri,
+Location const* WebServer::_findLocation(std::string const& path,
                                          Server const& server) const
 {
     Location const* best = NULL;
     for (size_t i = 0; i < server.locations.size(); ++i)
     {
-        if (uri.find(server.locations[i].path) == 0)
+        if (path.find(server.locations[i].path) == 0)
         {
             if (!best || server.locations[i].path.size() > best->path.size())
                 best = &server.locations[i];
@@ -272,7 +298,7 @@ void WebServer::_acceptClient(int listening_fd)
                                 inet_ntoa(client_addr.sin_addr),
                                 ntohs(client_addr.sin_port));
     _clients[client_fd] = client;
-    std::cout << *client << " has been accepted \n" << std::endl;
+    std::cout << *client << " has been accepted" << std::endl;
 
     if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
     {
@@ -305,7 +331,17 @@ void WebServer::_readClient(int client_fd)
     Client* client = _clients[client_fd];
     client->appendRequest(buf, n);
 
-    if (client->getRequest().isComplete())
+    HttpRequest const& request = client->getRequest();
+    if (!request.isComplete() && !request.hasError() &&
+        request.getContentLength() > 0)
+    {
+        Server const& server =
+            _findServer(request.getHeader("host"), client_fd);
+        client->checkBodyLimit(
+            static_cast<size_t>(server.client_max_body_size));
+    }
+
+    if (request.isComplete() || request.hasError())
         _handleRequest(client_fd);
 }
 
@@ -314,22 +350,22 @@ void WebServer::_handleRequest(int client_fd)
     Client* client = _clients[client_fd];
     HttpRequest const& request = client->getRequest();
 
-    std::cout << "[fd=" << client_fd << "] request complete:\n";
-    std::cout << client->getRequest() << std::endl;
+    std::cout << "[fd=" << client_fd << "] request complete" << std::endl;
+    // std::cout << client->getRequest() << std::endl;
 
     HttpResponse response;
     if (request.hasError())
     {
         std::cerr << "[error] " << _clients[client_fd]->getIp()
                   << " request failed: " << request.getError() << std::endl;
-        response.setStatus(400);
+        response.setStatus(request.getErrorStatus());
         response.buildDefaultErrorBody();
         client->setResponse(response.build());
         _setPollEvent(client_fd, POLLOUT);
         return;
     }
 
-    Server const& server = _findServer(request.getHeader("host"));
+    Server const& server = _findServer(request.getHeader("host"), client_fd);
 
     response.setVersion(request.getVersion());
 
@@ -358,12 +394,19 @@ void WebServer::_handleMethod(int client_fd,
                               Server const& server,
                               HttpResponse& response)
 {
-    std::string const uri = request.getUri();
-    Location const* loc = _findLocation(uri, server);
+    std::string const path = request.getPath();
+    Location const* loc = _findLocation(path, server);
 
     if (loc == NULL)
     {
         response.setStatus(404);
+        return;
+    }
+
+    if (!loc->redirect.empty())
+    {
+        response.setStatus(301);
+        response.setHeader("Location", loc->redirect);
         return;
     }
 
@@ -372,14 +415,14 @@ void WebServer::_handleMethod(int client_fd,
     if (_isCgi(request, *loc))
         _handleCgi(client_fd, request, *loc, response);
     else if (method == "GET")
-        handleGet(uri, server, *loc, response);
+        handleGet(path, *loc, response);
     else if (method == "POST")
     {
         std::string body = request.getBody();
-        handlePost(uri, body, server, *loc, response);
+        handlePost(path, body, *loc, response);
     }
     else if (method == "DELETE")
-        handleDelete(uri, server, *loc, response);
+        handleDelete(path, *loc, response);
     else
         response.setStatus(405);
 }
@@ -421,8 +464,8 @@ void WebServer::_finalizeResponse(int client_fd,
     Client* client = _clients[client_fd];
     _handleError(response, server, client->getIp());
     client->setResponse(response.build());
-    std::cout << "[fd=" << client_fd << "] response complete:\n";
-    std::cout << client->getResponse() << std::endl;
+    std::cout << "[fd=" << client_fd << "] response complete" << std::endl;
+    // std::cout << client->getResponse() << std::endl;
     _setPollEvent(client_fd, POLLOUT);
 }
 
@@ -435,10 +478,14 @@ void WebServer::_sendResponse(int client_fd)
     ssize_t n =
         send(client_fd, response.c_str() + sent, response.size() - sent, 0);
 
-    if (n == -1)
+    if (n <= 0)
     {
-        std::cerr << "[error] " << client->getIp()
-                  << " send failed: " << strerror(errno) << std::endl;
+        if (n == 0)
+            std::cout << "[info] client disconnected: " << client->getIp()
+                      << std::endl;
+        else
+            std::cerr << "[error] " << client->getIp()
+                      << " send failed: " << strerror(errno) << std::endl;
         _removeClient(client_fd);
         return;
     }
@@ -503,13 +550,16 @@ void WebServer::_readCgiOutput(int cgi_fd)
         }
         else
         {
-            std::cerr << "[error] cgi read failed: " << client->getIp()
-                      << std::endl;
+            std::cerr << "[error] cgi read failed: " << client->getIp() << ": "
+                      << strerror(errno) << std::endl;
             response.setStatus(502);
         }
 
+        if (_pipe_to_client.count(client->getCgi().pipe_in))
+            _removeCgiPipe(client->getCgi().pipe_in);
+
         Server const& server =
-            _findServer(client->getRequest().getHeader("host"));
+            _findServer(client->getRequest().getHeader("host"), client_fd);
         client->clearCgi();
         _finalizeResponse(client_fd, response, server);
 
@@ -528,10 +578,14 @@ void WebServer::_writeCgiBody(int cgi_fd)
 
     ssize_t n = write(cgi_fd, body.c_str() + sent, body.size() - sent);
 
-    if (n == -1)
+    if (n <= 0)
     {
-        std::cerr << "[error] " << client->getIp()
-                  << " cgi write failed: " << strerror(errno) << std::endl;
+        if (n == 0)
+            std::cout << "[info] cgi pipe closed: " << client->getIp()
+                      << std::endl;
+        else
+            std::cerr << "[error] " << client->getIp()
+                      << " cgi write failed: " << strerror(errno) << std::endl;
         _removeCgiPipe(cgi_fd);
         return;
     }
@@ -539,6 +593,48 @@ void WebServer::_writeCgiBody(int cgi_fd)
     client->getCgi().body_sent += n;
     if (client->getCgi().body_sent >= body.size())
         _removeCgiPipe(cgi_fd);
+}
+
+void WebServer::_checkCgiTimeouts()
+{
+    time_t now = time(NULL);
+    std::vector<int> timed_out;
+
+    std::map<int, Client*>::iterator it;
+    for (it = _clients.begin(); it != _clients.end(); ++it)
+    {
+        Client* client = it->second;
+        if (client->hasCgi() &&
+            now - client->getCgi().started > CGI_TIMEOUT_SECONDS)
+            timed_out.push_back(it->first);
+    }
+
+    for (size_t i = 0; i < timed_out.size(); ++i)
+        _killCgi(timed_out[i]);
+}
+
+void WebServer::_killCgi(int client_fd)
+{
+    Client* client = _clients[client_fd];
+    CgiProcess const& proc = client->getCgi();
+
+    std::cerr << "[error] " << client->getIp() << " cgi timed out, killing pid "
+              << proc.pid << std::endl;
+    kill(proc.pid, SIGKILL);
+
+    if (_pipe_to_client.count(proc.pipe_in))
+        _removeCgiPipe(proc.pipe_in);
+    if (_pipe_to_client.count(proc.pipe_out))
+        _removeCgiPipe(proc.pipe_out);
+
+    HttpResponse response;
+    response.setVersion(client->getRequest().getVersion());
+    response.setStatus(504);
+
+    Server const& server =
+        _findServer(client->getRequest().getHeader("host"), client_fd);
+    client->clearCgi();
+    _finalizeResponse(client_fd, response, server);
 }
 
 std::ostream& operator<<(std::ostream& os, WebServer const& ws)

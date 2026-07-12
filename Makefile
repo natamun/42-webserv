@@ -64,7 +64,7 @@ debug: re
 
 re: fclean all
 
-# Usage: make test FILE=test_name
+# Usage: make test FILE=tests/test_name.cpp
 test:
 	@echo "$(Y)--- Compiling test: $(FILE) ---$(RES)"
 	@$(CXX) $(CXXFLAGS) $(SRC_NO_MAIN) $(FILE) -o $(TEST_NAME)

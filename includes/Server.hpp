@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 00:35:44 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/02 00:36:43 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 18:17:57 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,8 @@
 class Server
 {
 public:
+    Server() : port(80), client_max_body_size(1000000) {}
+
     std::string host;
     std::string server_name;
     std::string root;

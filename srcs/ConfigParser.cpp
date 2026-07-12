@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 16:57:46 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/10 03:24:01 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 20:41:15 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,17 @@ void ConfigParser::_tokenize(std::string const& filepath)
     for (size_t i = 0; i < content.size(); ++i)
     {
         char c = content[i];
-        if (c == '{' || c == '}' || c == ';')
+        if (c == '#')
+        {
+            if (!current.empty())
+            {
+                _tokens.push_back(current);
+                current.clear();
+            }
+            while (i < content.size() && content[i] != '\n')
+                ++i;
+        }
+        else if (c == '{' || c == '}' || c == ';')
         {
             if (!current.empty())
             {

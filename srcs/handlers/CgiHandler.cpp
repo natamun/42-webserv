@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 01:02:49 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/10 03:30:33 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 22:33:29 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -53,7 +54,9 @@ static void runChild(int pipe_in[2],
     std::string ext = request.getExtension();
     std::string interpreter = loc.cgi.count(ext) ? loc.cgi.at(ext) : "";
     std::string query_string = request.getQueryString();
-    std::string script_name = uri_path.substr(uri_path.rfind('/') + 1);
+    std::string script_name = uri_path.substr(loc.path.size());
+    if (!script_name.empty() && script_name[0] == '/')
+        script_name.erase(0, 1);
 
     std::string host = request.getHeader("host");
     size_t colon = host.find(':');
@@ -68,7 +71,6 @@ static void runChild(int pipe_in[2],
     std::string query = "QUERY_STRING=" + query_string;
     std::string script = "SCRIPT_FILENAME=" + script_name;
     std::string script_nm = "SCRIPT_NAME=" + uri_path;
-    std::string path_info = "PATH_INFO=" + request.getUri();
     std::string cont_length = "CONTENT_LENGTH=" + oss.str();
     std::string cont_type = "CONTENT_TYPE=" + request.getHeader("content-type");
     std::string protocol = "SERVER_PROTOCOL=" + request.getVersion();
@@ -81,7 +83,6 @@ static void runChild(int pipe_in[2],
                    const_cast<char*>(query.c_str()),
                    const_cast<char*>(script.c_str()),
                    const_cast<char*>(script_nm.c_str()),
-                   const_cast<char*>(path_info.c_str()),
                    const_cast<char*>(cont_length.c_str()),
                    const_cast<char*>(cont_type.c_str()),
                    const_cast<char*>(protocol.c_str()),
@@ -146,6 +147,7 @@ CgiProcess spawnCgi(HttpRequest const& request, Location const& loc)
     proc.pid = pid;
     proc.pipe_in = pipe_in[1];
     proc.pipe_out = pipe_out[0];
+    proc.started = time(NULL);
     return proc;
 }
 

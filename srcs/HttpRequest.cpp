@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 16:57:02 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/10 03:28:06 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 22:36:26 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,10 @@
 #include <sstream>
 #include <string>
 
-HttpRequest::HttpRequest() : _state(PARSING_REQUEST_LINE), _contentLength(0) {}
+HttpRequest::HttpRequest()
+    : _state(PARSING_REQUEST_LINE), _errorStatus(400), _contentLength(0)
+{
+}
 
 HttpRequest::~HttpRequest() {}
 
@@ -139,7 +142,15 @@ void HttpRequest::_tryParseChunkedBody()
         if (crlf == std::string::npos)
             return;
 
-        size_t chunk_size = strtoul(_buffer.substr(0, crlf).c_str(), NULL, 16);
+        std::string size_str = _buffer.substr(0, crlf);
+        char* endptr = NULL;
+        size_t chunk_size = strtoul(size_str.c_str(), &endptr, 16);
+
+        if (size_str.empty() || endptr != size_str.c_str() + size_str.size())
+        {
+            _fail("Invalid chunk size");
+            return;
+        }
 
         if (_buffer.size() < crlf + 2 + chunk_size + 2)
             return;
@@ -167,10 +178,17 @@ void HttpRequest::_tryParseBody()
     _state = COMPLETE;
 }
 
-void HttpRequest::_fail(std::string const& reason)
+void HttpRequest::_fail(std::string const& reason, int status)
 {
     _state = ERROR;
     _error = reason;
+    _errorStatus = status;
+}
+
+void HttpRequest::checkBodyLimit(size_t maxBodySize)
+{
+    if (_contentLength > maxBodySize)
+        _fail("Body exceeds client_max_body_size", 413);
 }
 
 bool HttpRequest::isComplete() const
@@ -217,6 +235,16 @@ std::string const& HttpRequest::getHeader(std::string const& key) const
 std::string const& HttpRequest::getError() const
 {
     return _error;
+}
+
+int HttpRequest::getErrorStatus() const
+{
+    return _errorStatus;
+}
+
+size_t HttpRequest::getContentLength() const
+{
+    return _contentLength;
 }
 
 std::string HttpRequest::getPath() const

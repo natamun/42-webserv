@@ -6,11 +6,12 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 18:33:46 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/09 02:09:49 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/11 18:23:02 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstring>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -19,7 +20,6 @@
 
 void handlePost(std::string const& path,
                 std::string const& body,
-                Server const& server,
                 Location const& loc,
                 HttpResponse& res)
 {
@@ -34,11 +34,6 @@ void handlePost(std::string const& path,
         res.setStatus(405);
         return;
     }
-    if ((int)body.size() > server.client_max_body_size)
-    {
-        res.setStatus(413);
-        return;
-    }
     if (loc.upload_path.empty())
     {
         res.setStatus(500);
@@ -46,6 +41,11 @@ void handlePost(std::string const& path,
     }
 
     std::string filename = path.substr(loc.path.size());
+    if (filename.find("..") != std::string::npos)
+    {
+        res.setStatus(403);
+        return;
+    }
     if (filename.empty() || filename == "/")
     {
         std::ostringstream oss;

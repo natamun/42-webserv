@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   GetHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dufama <dufama@student.42lausanne.ch>      +#+  +:+       +#+        */
+/*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/10 10:13:21 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/10 10:13:21 by dufama           ###   ########.fr       */
+/*   Updated: 2026/07/11 21:56:12 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,12 +105,8 @@ static std::string generateAutoIndex(std::string const& dirPath,
     return html.str();
 }
 
-void handleGet(std::string const& path,
-               Server const& server,
-               Location const& loc,
-               HttpResponse& res)
+void handleGet(std::string const& path, Location const& loc, HttpResponse& res)
 {
-    (void)server;
     bool getAllowed = false;
     for (size_t i = 0; i < loc.methods.size(); ++i)
     {
@@ -123,7 +119,17 @@ void handleGet(std::string const& path,
         return;
     }
 
-    std::string filePath = loc.root + path;
+    if (path.find("..") != std::string::npos)
+    {
+        res.setStatus(403);
+        return;
+    }
+
+    std::string relative = path.substr(loc.path.size());
+    if (relative.empty() || relative[0] != '/')
+        relative = "/" + relative;
+
+    std::string filePath = loc.root + relative;
 
     struct stat st;
     if (stat(filePath.c_str(), &st) != 0)
