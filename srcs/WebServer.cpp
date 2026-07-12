@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/12 17:21:45 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:56:16 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@
 #include "Handlers.hpp"
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
+#include "Router.hpp"
 #include "WebServerException.hpp"
 
 WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
@@ -226,55 +227,6 @@ void WebServer::_closeClients()
     _clients.clear();
 }
 
-Server const& WebServer::_findServer(std::string const& host,
-                                     int client_fd) const
-{
-    struct sockaddr_in local_addr;
-    socklen_t len = sizeof(local_addr);
-    int real_port = -1;
-
-    if (getsockname(client_fd, (struct sockaddr*)&local_addr, &len) == 0)
-        real_port = ntohs(local_addr.sin_port);
-
-    std::string hostname = host.substr(0, host.find(":"));
-    Server const* fallback = &_servers[0];
-
-    for (size_t i = 0; i < _servers.size(); ++i)
-    {
-        if (_servers[i].port != real_port)
-            continue;
-        if (_servers[i].server_name == hostname)
-            return _servers[i];
-        fallback = &_servers[i];
-    }
-    return *fallback;
-}
-
-Location const* WebServer::_findLocation(std::string const& path,
-                                         Server const& server) const
-{
-    Location const* best = NULL;
-    for (size_t i = 0; i < server.locations.size(); ++i)
-    {
-        if (path.find(server.locations[i].path) == 0)
-        {
-            if (!best || server.locations[i].path.size() > best->path.size())
-                best = &server.locations[i];
-        }
-    }
-    return best;
-}
-
-bool WebServer::_isCgi(HttpRequest const& request, Location const& loc) const
-{
-    if (loc.cgi.empty())
-        return false;
-    std::string ext = request.getExtension();
-    if (ext.empty())
-        return false;
-    return loc.cgi.count(ext) > 0;
-}
-
 bool WebServer::_isListeningSocket(int listening_fd) const
 {
     for (size_t i = 0; i < _sockets.size(); ++i)
@@ -336,7 +288,7 @@ void WebServer::_readClient(int client_fd)
     if (!request.isComplete() && !request.hasError())
     {
         Server const& server =
-            _findServer(request.getHeader("host"), client_fd);
+            findServer(_servers, request.getHeader("host"), client_fd);
         client->checkBodyLimit(
             static_cast<size_t>(server.client_max_body_size));
     }
@@ -365,7 +317,8 @@ void WebServer::_handleRequest(int client_fd)
         return;
     }
 
-    Server const& server = _findServer(request.getHeader("host"), client_fd);
+    Server const& server =
+        findServer(_servers, request.getHeader("host"), client_fd);
 
     response.setVersion(request.getVersion());
 
@@ -395,7 +348,7 @@ void WebServer::_handleMethod(int client_fd,
                               HttpResponse& response)
 {
     std::string const path = request.getPath();
-    Location const* loc = _findLocation(path, server);
+    Location const* loc = findLocation(path, server);
 
     if (loc == NULL)
     {
@@ -418,7 +371,7 @@ void WebServer::_handleMethod(int client_fd,
         return;
     }
 
-    if (_isCgi(request, *loc))
+    if (isCgi(request, *loc))
         _handleCgi(client_fd, request, *loc, response);
     else if (method == "GET")
         handleGet(path, *loc, response);
@@ -564,8 +517,8 @@ void WebServer::_readCgiOutput(int cgi_fd)
         if (_pipe_to_client.count(client->getCgi().pipe_in))
             _removeCgiPipe(client->getCgi().pipe_in);
 
-        Server const& server =
-            _findServer(client->getRequest().getHeader("host"), client_fd);
+        Server const& server = findServer(
+            _servers, client->getRequest().getHeader("host"), client_fd);
         client->clearCgi();
         _finalizeResponse(client_fd, response, server);
 
@@ -638,7 +591,7 @@ void WebServer::_killCgi(int client_fd)
     response.setStatus(504);
 
     Server const& server =
-        _findServer(client->getRequest().getHeader("host"), client_fd);
+        findServer(_servers, client->getRequest().getHeader("host"), client_fd);
     client->clearCgi();
     _finalizeResponse(client_fd, response, server);
 }
