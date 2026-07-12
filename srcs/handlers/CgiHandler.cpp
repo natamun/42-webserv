@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 01:02:49 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 22:33:29 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 16:37:59 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,8 @@ static void runChild(int pipe_in[2],
 
     std::string uri_path = request.getPath();
     std::string ext = request.getExtension();
-    std::string interpreter = loc.cgi.count(ext) ? loc.cgi.at(ext) : "";
+    std::map<std::string, std::string>::const_iterator it = loc.cgi.find(ext);
+    std::string interpreter = (it != loc.cgi.end()) ? it->second : "";
     std::string query_string = request.getQueryString();
     std::string script_name = uri_path.substr(loc.path.size());
     if (!script_name.empty() && script_name[0] == '/')
