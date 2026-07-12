@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 16:57:02 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/11 22:36:26 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:07:29 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -187,7 +187,9 @@ void HttpRequest::_fail(std::string const& reason, int status)
 
 void HttpRequest::checkBodyLimit(size_t maxBodySize)
 {
-    if (_contentLength > maxBodySize)
+    size_t size =
+        (_state == PARSING_CHUNKED_BODY) ? _body.size() : _contentLength;
+    if (size > maxBodySize)
         _fail("Body exceeds client_max_body_size", 413);
 }
 

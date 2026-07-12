@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/12 16:47:33 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:07:22 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -333,8 +333,7 @@ void WebServer::_readClient(int client_fd)
     client->appendRequest(buf, n);
 
     HttpRequest const& request = client->getRequest();
-    if (!request.isComplete() && !request.hasError() &&
-        request.getContentLength() > 0)
+    if (!request.isComplete() && !request.hasError())
     {
         Server const& server =
             _findServer(request.getHeader("host"), client_fd);
