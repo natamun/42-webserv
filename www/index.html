@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Webserv</title>
     <link rel="stylesheet" href="/style.css">
 </head>
+
 <body>
     <h1>Bienvenue sur mon webserv</h1>
     <nav>
@@ -21,9 +23,50 @@
         <input type="submit" value="Envoyer">
     </form>
 
+    <h2>Test CGI POST python</h2>
+    <form class="cgi-form" action="/cgi-bin/post_form.py" method="POST">
+        <label for="name-py">Nom :</label>
+        <input type="text" id="name-py" name="name">
+        <br>
+        <label for="project-py">Projet :</label>
+        <input type="text" id="project-py" name="project" value="webserv">
+        <br>
+        <input type="submit" value="Envoyer (Python)">
+    </form>
+
+    <h2>Test CGI POST php</h2>
+    <form class="cgi-form" action="/cgi-bin/post_form.php" method="POST">
+        <label for="name-php">Nom :</label>
+        <input type="text" id="name-php" name="name">
+        <br>
+        <label for="project-php">Projet :</label>
+        <input type="text" id="project-php" name="project" value="webserv">
+        <br>
+        <input type="submit" value="Envoyer (PHP)">
+    </form>
+
+    <div id="cgi-result"></div>
+
     <h2>Galerie d'images</h2>
     <a href="/images/">
         <button type="button">Voir toutes les images</button>
     </a>
+
+    <script>
+        document.querySelectorAll(".cgi-form").forEach(function (form) {
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                fetch(this.action, {
+                    method: "POST",
+                    body: new URLSearchParams(new FormData(this))
+                })
+                    .then(function (r) { return r.text(); })
+                    .then(function (html) {
+                        document.getElementById("cgi-result").innerHTML = html;
+                    });
+            });
+        });
+    </script>
 </body>
+
 </html>
