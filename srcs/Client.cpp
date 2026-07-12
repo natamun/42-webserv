@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 00:00:00 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 21:46:04 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:21:37 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,9 +77,9 @@ CgiProcess const& Client::getCgi() const
     return _cgi;
 }
 
-CgiProcess& Client::getCgi()
+void Client::addCgiBodySent(size_t n)
 {
-    return _cgi;
+    _cgi.body_sent += n;
 }
 
 std::string const& Client::getCgiOutput() const

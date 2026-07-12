@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 00:02:05 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 21:46:00 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:21:06 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,6 @@ public:
     std::string const& getResponse() const;
     size_t getSentBytes() const;
     CgiProcess const& getCgi() const;
-    CgiProcess& getCgi();
     std::string const& getCgiOutput() const;
     bool hasCgi() const;
 
@@ -42,6 +41,7 @@ public:
     void setResponse(std::string const& response);
     void addSentBytes(size_t n);
     void setCgi(CgiProcess const& cgi);
+    void addCgiBodySent(size_t n);
     void appendCgiOutput(char const* buf, size_t n);
     void clearCgi();
 

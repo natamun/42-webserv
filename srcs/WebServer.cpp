@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/12 17:07:22 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:21:45 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -596,7 +596,7 @@ void WebServer::_writeCgiBody(int cgi_fd)
         return;
     }
 
-    client->getCgi().body_sent += n;
+    client->addCgiBodySent(n);
     if (client->getCgi().body_sent >= body.size())
         _removeCgiPipe(cgi_fd);
 }
