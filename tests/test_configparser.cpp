@@ -75,11 +75,11 @@ static bool throwsRuntimeError(std::string const& conf)
     return threw;
 }
 
-// ---- Test 1 : parsing complet de tests/default.conf ----
+// ---- Test 1 : parsing complet de default.conf ----
 void test_parseDefaultConf()
 {
-    TEST("parse tests/default.conf produces the expected server");
-    ConfigParser parser("tests/default.conf");
+    TEST("parse default.conf produces the expected server");
+    ConfigParser parser("default.conf");
     std::vector<Server> servers = parser.parse();
 
     ASSERT_TRUE(servers.size() == 1);
