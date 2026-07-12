@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 00:35:46 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/10 03:24:10 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:11:13 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 class Location
 {
 public:
+    Location() : autoindex(false) {}
+
     std::string path;
     std::set<std::string> methods;
     std::string root;

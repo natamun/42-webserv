@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 16:57:46 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/12 16:47:36 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:11:19 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -210,7 +210,6 @@ Server ConfigParser::_parseServer()
 Location ConfigParser::_parseLocation()
 {
     Location loc;
-    loc.autoindex = false;
 
     while (_peek() != "}")
     {
