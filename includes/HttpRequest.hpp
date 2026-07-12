@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 16:26:47 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/11 21:46:02 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:12:20 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,9 @@ public:
     std::string getExtension() const;
 
 private:
+    HttpRequest(HttpRequest const& other);
+    HttpRequest& operator=(HttpRequest const& other);
+
     State _state;
     std::string _buffer;
     std::string _method;
