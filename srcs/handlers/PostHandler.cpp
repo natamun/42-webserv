@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 18:33:46 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 18:23:02 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 16:47:39 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,17 +23,6 @@ void handlePost(std::string const& path,
                 Location const& loc,
                 HttpResponse& res)
 {
-    bool postAllowed = false;
-    for (size_t i = 0; i < loc.methods.size(); ++i)
-    {
-        if (loc.methods[i] == "POST")
-            postAllowed = true;
-    }
-    if (!postAllowed)
-    {
-        res.setStatus(405);
-        return;
-    }
     if (loc.upload_path.empty())
     {
         res.setStatus(500);

@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 22:41:10 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 16:47:33 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <set>
 
 #include "CgiHandler.hpp"
 #include "Handlers.hpp"
@@ -412,6 +413,12 @@ void WebServer::_handleMethod(int client_fd,
 
     std::string const method = request.getMethod();
 
+    if (loc->methods.count(method) == 0)
+    {
+        response.setStatus(405);
+        return;
+    }
+
     if (_isCgi(request, *loc))
         _handleCgi(client_fd, request, *loc, response);
     else if (method == "GET")
@@ -666,8 +673,9 @@ std::ostream& operator<<(std::ostream& os, WebServer const& ws)
             Location const& loc = s.locations[j];
             os << "    [" << loc.path << "]\n";
             os << "      methods:    ";
-            for (size_t k = 0; k < loc.methods.size(); ++k)
-                os << loc.methods[k] << " ";
+            std::set<std::string>::const_iterator mit;
+            for (mit = loc.methods.begin(); mit != loc.methods.end(); ++mit)
+                os << *mit << " ";
             os << "\n";
             os << "      root:       " << loc.root << "\n";
             os << "      index:      " << loc.index << "\n";

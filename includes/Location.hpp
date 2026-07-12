@@ -14,14 +14,14 @@
 #define LOCATION_HPP
 
 #include <map>
+#include <set>
 #include <string>
-#include <vector>
 
 class Location
 {
 public:
     std::string path;
-    std::vector<std::string> methods;
+    std::set<std::string> methods;
     std::string root;
     std::string index;
     bool autoindex;

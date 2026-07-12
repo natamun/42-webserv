@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 16:57:46 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/11 20:41:15 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 16:47:36 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -219,7 +219,7 @@ Location ConfigParser::_parseLocation()
         if (directive == "allow_methods")
         {
             while (_peek() != ";")
-                loc.methods.push_back(_next());
+                loc.methods.insert(_next());
             _expect(";");
         }
         else if (directive == "root")
