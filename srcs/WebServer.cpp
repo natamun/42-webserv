@@ -6,14 +6,14 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 22:41:10 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 19:02:08 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "WebServer.hpp"
 
-#include <arpa/inet.h>
 #include <fcntl.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -25,11 +25,14 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <set>
+#include <sstream>
 
 #include "CgiHandler.hpp"
 #include "Handlers.hpp"
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
+#include "Router.hpp"
 #include "WebServerException.hpp"
 
 WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
@@ -38,36 +41,54 @@ WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
     signal(SIGPIPE, SIG_IGN);
     for (size_t i = 0; i < _servers.size(); ++i)
     {
-        int fd = socket(AF_INET, SOCK_STREAM, 0);
+        struct addrinfo hints;
+        std::memset(&hints, 0, sizeof(hints));
+        hints.ai_family = AF_INET;
+        hints.ai_socktype = SOCK_STREAM;
+        hints.ai_flags = AI_NUMERICHOST;
+
+        std::ostringstream portStr;
+        portStr << _servers[i].port;
+
+        struct addrinfo* res = NULL;
+        int gaiErr = getaddrinfo(
+            _servers[i].host.c_str(), portStr.str().c_str(), &hints, &res);
+        if (gaiErr != 0)
+        {
+            _closeSockets();
+            throw WebServerException(
+                "getaddrinfo", _servers[i].host, _servers[i].port, gaiErr);
+        }
+
+        int fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
         if (fd == -1)
         {
+            freeaddrinfo(res);
             _closeSockets();
             throw WebServerException(
                 "socket", _servers[i].host, _servers[i].port);
         }
 
-        struct sockaddr_in addr;
-        std::memset(&addr, 0, sizeof(addr));
-        addr.sin_family = AF_INET;
-        addr.sin_port = htons(_servers[i].port);
-        addr.sin_addr.s_addr = inet_addr(_servers[i].host.c_str());
-
         int opt = 1;
         if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
         {
             close(fd);
+            freeaddrinfo(res);
             _closeSockets();
             throw WebServerException(
                 "setsockopt", _servers[i].host, _servers[i].port);
         }
 
-        if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1)
+        if (bind(fd, res->ai_addr, res->ai_addrlen) == -1)
         {
             close(fd);
+            freeaddrinfo(res);
             _closeSockets();
             throw WebServerException(
                 "bind", _servers[i].host, _servers[i].port);
         }
+
+        freeaddrinfo(res);
 
         if (listen(fd, SOMAXCONN) == -1)
         {
@@ -225,61 +246,21 @@ void WebServer::_closeClients()
     _clients.clear();
 }
 
-Server const& WebServer::_findServer(std::string const& host,
-                                     int client_fd) const
-{
-    struct sockaddr_in local_addr;
-    socklen_t len = sizeof(local_addr);
-    int real_port = -1;
-
-    if (getsockname(client_fd, (struct sockaddr*)&local_addr, &len) == 0)
-        real_port = ntohs(local_addr.sin_port);
-
-    std::string hostname = host.substr(0, host.find(":"));
-    Server const* fallback = &_servers[0];
-
-    for (size_t i = 0; i < _servers.size(); ++i)
-    {
-        if (_servers[i].port != real_port)
-            continue;
-        if (_servers[i].server_name == hostname)
-            return _servers[i];
-        fallback = &_servers[i];
-    }
-    return *fallback;
-}
-
-Location const* WebServer::_findLocation(std::string const& path,
-                                         Server const& server) const
-{
-    Location const* best = NULL;
-    for (size_t i = 0; i < server.locations.size(); ++i)
-    {
-        if (path.find(server.locations[i].path) == 0)
-        {
-            if (!best || server.locations[i].path.size() > best->path.size())
-                best = &server.locations[i];
-        }
-    }
-    return best;
-}
-
-bool WebServer::_isCgi(HttpRequest const& request, Location const& loc) const
-{
-    if (loc.cgi.empty())
-        return false;
-    std::string ext = request.getExtension();
-    if (ext.empty())
-        return false;
-    return loc.cgi.count(ext) > 0;
-}
-
 bool WebServer::_isListeningSocket(int listening_fd) const
 {
     for (size_t i = 0; i < _sockets.size(); ++i)
         if (_sockets[i] == listening_fd)
             return true;
     return false;
+}
+
+static std::string ipToString(struct in_addr addr)
+{
+    unsigned long hostOrder = ntohl(addr.s_addr);
+    std::ostringstream oss;
+    oss << ((hostOrder >> 24) & 0xFF) << "." << ((hostOrder >> 16) & 0xFF)
+        << "." << ((hostOrder >> 8) & 0xFF) << "." << (hostOrder & 0xFF);
+    return oss.str();
 }
 
 void WebServer::_acceptClient(int listening_fd)
@@ -295,7 +276,7 @@ void WebServer::_acceptClient(int listening_fd)
     }
 
     Client* client = new Client(client_fd,
-                                inet_ntoa(client_addr.sin_addr),
+                                ipToString(client_addr.sin_addr),
                                 ntohs(client_addr.sin_port));
     _clients[client_fd] = client;
     std::cout << *client << " has been accepted" << std::endl;
@@ -332,11 +313,10 @@ void WebServer::_readClient(int client_fd)
     client->appendRequest(buf, n);
 
     HttpRequest const& request = client->getRequest();
-    if (!request.isComplete() && !request.hasError() &&
-        request.getContentLength() > 0)
+    if (!request.isComplete() && !request.hasError())
     {
         Server const& server =
-            _findServer(request.getHeader("host"), client_fd);
+            findServer(_servers, request.getHeader("host"), client_fd);
         client->checkBodyLimit(
             static_cast<size_t>(server.client_max_body_size));
     }
@@ -365,7 +345,8 @@ void WebServer::_handleRequest(int client_fd)
         return;
     }
 
-    Server const& server = _findServer(request.getHeader("host"), client_fd);
+    Server const& server =
+        findServer(_servers, request.getHeader("host"), client_fd);
 
     response.setVersion(request.getVersion());
 
@@ -395,7 +376,7 @@ void WebServer::_handleMethod(int client_fd,
                               HttpResponse& response)
 {
     std::string const path = request.getPath();
-    Location const* loc = _findLocation(path, server);
+    Location const* loc = findLocation(path, server);
 
     if (loc == NULL)
     {
@@ -412,7 +393,13 @@ void WebServer::_handleMethod(int client_fd,
 
     std::string const method = request.getMethod();
 
-    if (_isCgi(request, *loc))
+    if (loc->methods.count(method) == 0)
+    {
+        response.setStatus(405);
+        return;
+    }
+
+    if (isCgi(request, *loc))
         _handleCgi(client_fd, request, *loc, response);
     else if (method == "GET")
         handleGet(path, *loc, response);
@@ -558,8 +545,8 @@ void WebServer::_readCgiOutput(int cgi_fd)
         if (_pipe_to_client.count(client->getCgi().pipe_in))
             _removeCgiPipe(client->getCgi().pipe_in);
 
-        Server const& server =
-            _findServer(client->getRequest().getHeader("host"), client_fd);
+        Server const& server = findServer(
+            _servers, client->getRequest().getHeader("host"), client_fd);
         client->clearCgi();
         _finalizeResponse(client_fd, response, server);
 
@@ -590,7 +577,7 @@ void WebServer::_writeCgiBody(int cgi_fd)
         return;
     }
 
-    client->getCgi().body_sent += n;
+    client->addCgiBodySent(n);
     if (client->getCgi().body_sent >= body.size())
         _removeCgiPipe(cgi_fd);
 }
@@ -632,7 +619,7 @@ void WebServer::_killCgi(int client_fd)
     response.setStatus(504);
 
     Server const& server =
-        _findServer(client->getRequest().getHeader("host"), client_fd);
+        findServer(_servers, client->getRequest().getHeader("host"), client_fd);
     client->clearCgi();
     _finalizeResponse(client_fd, response, server);
 }
@@ -666,8 +653,9 @@ std::ostream& operator<<(std::ostream& os, WebServer const& ws)
             Location const& loc = s.locations[j];
             os << "    [" << loc.path << "]\n";
             os << "      methods:    ";
-            for (size_t k = 0; k < loc.methods.size(); ++k)
-                os << loc.methods[k] << " ";
+            std::set<std::string>::const_iterator mit;
+            for (mit = loc.methods.begin(); mit != loc.methods.end(); ++mit)
+                os << *mit << " ";
             os << "\n";
             os << "      root:       " << loc.root << "\n";
             os << "      index:      " << loc.index << "\n";

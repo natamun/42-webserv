@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 17:48:12 by dufama            #+#    #+#             */
-/*   Updated: 2026/07/10 02:23:02 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:07:20 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -268,6 +268,27 @@ void test_chunkedBodyFragmented()
     PASS();
 }
 
+// ---- Test 13 : chunk size invalide (pas de l'hexadécimal) -> erreur ----
+void test_malformedChunkedBody()
+{
+    TEST("malformed chunk size triggers error state");
+    HttpRequest req;
+    std::string raw =
+        "POST /upload HTTP/1.1\r\n"
+        "Transfer-Encoding: chunked\r\n"
+        "\r\n"
+        "ZZZ\r\n"
+        "hello\r\n"
+        "0\r\n"
+        "\r\n";
+    req.appendData(raw.c_str(), raw.size());
+
+    ASSERT_TRUE(req.hasError());
+    ASSERT_TRUE(!req.isComplete());
+    ASSERT_TRUE(req.getErrorStatus() == 400);
+    PASS();
+}
+
 int main()
 {
     test_simpleGet();
@@ -282,6 +303,7 @@ int main()
     test_getWithoutBody();
     test_chunkedBody();
     test_chunkedBodyFragmented();
+    test_malformedChunkedBody();
 
     std::cout << "\n"
               << g_testsPassed << "/" << g_testsRun << " tests passed."

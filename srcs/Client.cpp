@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 00:00:00 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 21:46:04 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:40:51 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,50 @@ Client::Client(int fd, std::string const& ip, int port)
 }
 
 Client::~Client() {}
+
+void Client::appendRequest(char const* buf, size_t n)
+{
+    _request.appendData(buf, n);
+}
+
+void Client::checkBodyLimit(size_t maxBodySize)
+{
+    _request.checkBodyLimit(maxBodySize);
+}
+
+void Client::setResponse(std::string const& response)
+{
+    _response = response;
+    _sent_bytes = 0;
+}
+
+void Client::addSentBytes(size_t n)
+{
+    _sent_bytes += n;
+}
+
+void Client::setCgi(CgiProcess const& cgi)
+{
+    _cgi = cgi;
+    _has_cgi = true;
+}
+
+void Client::addCgiBodySent(size_t n)
+{
+    _cgi.body_sent += n;
+}
+
+void Client::appendCgiOutput(char const* buf, size_t n)
+{
+    _cgi_output.append(buf, n);
+}
+
+void Client::clearCgi()
+{
+    _cgi = CgiProcess();
+    _cgi_output.clear();
+    _has_cgi = false;
+}
 
 int Client::getFd() const
 {
@@ -51,33 +95,7 @@ size_t Client::getSentBytes() const
     return _sent_bytes;
 }
 
-void Client::appendRequest(char const* buf, size_t n)
-{
-    _request.appendData(buf, n);
-}
-
-void Client::checkBodyLimit(size_t maxBodySize)
-{
-    _request.checkBodyLimit(maxBodySize);
-}
-
-void Client::setResponse(std::string const& response)
-{
-    _response = response;
-    _sent_bytes = 0;
-}
-
-void Client::addSentBytes(size_t n)
-{
-    _sent_bytes += n;
-}
-
 CgiProcess const& Client::getCgi() const
-{
-    return _cgi;
-}
-
-CgiProcess& Client::getCgi()
 {
     return _cgi;
 }
@@ -90,24 +108,6 @@ std::string const& Client::getCgiOutput() const
 bool Client::hasCgi() const
 {
     return _has_cgi;
-}
-
-void Client::setCgi(CgiProcess const& cgi)
-{
-    _cgi = cgi;
-    _has_cgi = true;
-}
-
-void Client::appendCgiOutput(char const* buf, size_t n)
-{
-    _cgi_output.append(buf, n);
-}
-
-void Client::clearCgi()
-{
-    _cgi = CgiProcess();
-    _cgi_output.clear();
-    _has_cgi = false;
 }
 
 std::ostream& operator<<(std::ostream& os, Client const& client)

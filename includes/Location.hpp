@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 00:35:46 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/10 03:24:10 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:11:13 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,14 +14,16 @@
 #define LOCATION_HPP
 
 #include <map>
+#include <set>
 #include <string>
-#include <vector>
 
 class Location
 {
 public:
+    Location() : autoindex(false) {}
+
     std::string path;
-    std::vector<std::string> methods;
+    std::set<std::string> methods;
     std::string root;
     std::string index;
     bool autoindex;

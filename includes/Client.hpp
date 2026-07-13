@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 00:02:05 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 21:46:00 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:40:49 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,15 @@ public:
     Client(int fd, std::string const& ip, int port);
     ~Client();
 
+    void appendRequest(char const* buf, size_t n);
+    void checkBodyLimit(size_t maxBodySize);
+    void setResponse(std::string const& response);
+    void addSentBytes(size_t n);
+    void setCgi(CgiProcess const& cgi);
+    void addCgiBodySent(size_t n);
+    void appendCgiOutput(char const* buf, size_t n);
+    void clearCgi();
+
     int getFd() const;
     std::string const& getIp() const;
     int getPort() const;
@@ -33,17 +42,8 @@ public:
     std::string const& getResponse() const;
     size_t getSentBytes() const;
     CgiProcess const& getCgi() const;
-    CgiProcess& getCgi();
     std::string const& getCgiOutput() const;
     bool hasCgi() const;
-
-    void appendRequest(char const* buf, size_t n);
-    void checkBodyLimit(size_t maxBodySize);
-    void setResponse(std::string const& response);
-    void addSentBytes(size_t n);
-    void setCgi(CgiProcess const& cgi);
-    void appendCgiOutput(char const* buf, size_t n);
-    void clearCgi();
 
 private:
     Client(Client const& other);

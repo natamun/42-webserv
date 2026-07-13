@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 18:33:42 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 21:56:14 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 16:47:45 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,18 +21,6 @@ void handleDelete(std::string const& path,
                   Location const& loc,
                   HttpResponse& res)
 {
-    bool deleteAllowed = false;
-    for (size_t i = 0; i < loc.methods.size(); ++i)
-    {
-        if (loc.methods[i] == "DELETE")
-            deleteAllowed = true;
-    }
-    if (!deleteAllowed)
-    {
-        res.setStatus(405);
-        return;
-    }
-
     if (path.find("..") != std::string::npos)
     {
         res.setStatus(403);

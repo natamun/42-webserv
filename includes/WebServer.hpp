@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 22:10:07 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/12 17:56:18 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,12 +52,6 @@ private:
     // clients
     void _removeClient(int client_fd);
     void _closeClients();
-
-    // routing
-    Server const& _findServer(std::string const& host, int client_fd) const;
-    Location const* _findLocation(std::string const& uri,
-                                  Server const& server) const;
-    bool _isCgi(HttpRequest const& request, Location const& loc) const;
 
     // event loop
     bool _isListeningSocket(int listening_fd) const;

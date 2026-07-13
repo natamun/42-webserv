@@ -11,7 +11,8 @@ SRCS_FILES	= main.cpp \
 			  Client.cpp \
 			  ConfigParser.cpp \
 			  HttpRequest.cpp \
-        HttpResponse.cpp
+			  HttpResponse.cpp \
+			  Router.cpp
 SRCS		= $(addprefix $(SRCS_DIR)/, $(SRCS_FILES))
 OBJ			= $(addprefix $(OBJ_DIR)/, $(SRCS_FILES:.cpp=.o))
 
