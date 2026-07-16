@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/16 18:54:43 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/16 19:13:38 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -449,7 +449,9 @@ void WebServer::_finalizeResponse(int client_fd,
                                   Server const& server)
 {
     Client* client = _clients[client_fd];
-    _cookies.ensureClientId(client->getRequest(), response);
+    std::string clientId =
+        _cookies.ensureClientId(client->getRequest(), response);
+    _cookies.trackRequest(clientId, response);
     _handleError(response, server, client->getIp());
     client->setResponse(response.build());
     std::cout << "[fd=" << client_fd << "] response complete" << std::endl;

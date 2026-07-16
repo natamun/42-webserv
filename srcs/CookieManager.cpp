@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/12 17:31:22 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/16 18:54:41 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/16 19:13:36 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,13 @@ std::string CookieManager::ensureClientId(HttpRequest const& request,
     }
 
     return id;
+}
+
+void CookieManager::trackRequest(std::string const& id, HttpResponse& response)
+{
+    std::ostringstream countStr;
+    countStr << ++_requestCounts[id];
+    response.setHeader("Request-Count", countStr.str());
 }
 
 std::string CookieManager::_extractCookie(std::string const& cookieHeader,
