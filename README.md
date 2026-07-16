@@ -34,6 +34,8 @@ HTTP/1.1 server written from scratch in C++98. A single `poll()` call drives eve
 | `make debug` | Rebuilds with `-g` |
 | `make test FILE=tests/x.cpp` | Compiles and runs `x.cpp` against the rest of the codebase, excluding `main.cpp`: `x.cpp` supplies its own `main()` in place of the real one |
 
+Every pull request to `main` is checked by CI before it can be merged: `clang-format` first, then `make`.
+
 ## Usage
 
 ```bash
