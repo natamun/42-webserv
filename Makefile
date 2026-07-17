@@ -12,7 +12,8 @@ SRCS_FILES	= main.cpp \
 			  ConfigParser.cpp \
 			  HttpRequest.cpp \
 			  HttpResponse.cpp \
-			  Router.cpp
+			  Router.cpp \
+			  CookieManager.cpp
 SRCS		= $(addprefix $(SRCS_DIR)/, $(SRCS_FILES))
 OBJ			= $(addprefix $(OBJ_DIR)/, $(SRCS_FILES:.cpp=.o))
 

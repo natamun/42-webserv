@@ -15,6 +15,9 @@
         <a href="/about.html">A propos</a>
     </nav>
 
+    <h2>Session (cookie)</h2>
+    <p id="request-count">Chargement...</p>
+
     <h2>Test d'upload</h2>
     <form action="/upload" method="POST" enctype="multipart/form-data">
         <label for="file">Choisir un fichier :</label><br>
@@ -53,6 +56,13 @@
     </a>
 
     <script>
+        fetch(window.location.href)
+            .then(function (r) { return r.headers.get("Request-Count"); })
+            .then(function (count) {
+                document.getElementById("request-count").textContent =
+                    "Nombre de requetes de cette session : " + count;
+            });
+
         document.querySelectorAll(".cgi-form").forEach(function (form) {
             form.addEventListener("submit", function (e) {
                 e.preventDefault();

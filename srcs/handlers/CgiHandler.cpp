@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 01:02:49 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/12 16:37:59 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/16 19:21:07 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,7 @@ static void runChild(int pipe_in[2],
     std::string srv_port = "SERVER_PORT=" + server_port;
     std::string gateway = "GATEWAY_INTERFACE=CGI/1.1";
     std::string redirect = "REDIRECT_STATUS=200";
+    std::string cookie = "HTTP_COOKIE=" + request.getHeader("cookie");
 
     char* env[] = {const_cast<char*>(method.c_str()),
                    const_cast<char*>(query.c_str()),
@@ -91,6 +92,7 @@ static void runChild(int pipe_in[2],
                    const_cast<char*>(srv_port.c_str()),
                    const_cast<char*>(gateway.c_str()),
                    const_cast<char*>(redirect.c_str()),
+                   const_cast<char*>(cookie.c_str()),
                    NULL};
     char* argv[] = {const_cast<char*>(interpreter.c_str()),
                     const_cast<char*>(script_name.c_str()),

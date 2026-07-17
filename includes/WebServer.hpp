@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:59 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/12 17:56:18 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/07/16 18:54:40 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "Client.hpp"
+#include "CookieManager.hpp"
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
 #include "Location.hpp"
@@ -92,6 +93,7 @@ private:
     std::vector<struct pollfd> _pollfds;
     std::map<int, Client*> _clients;
     std::map<int, int> _pipe_to_client;
+    CookieManager _cookies;
 };
 
 std::ostream& operator<<(std::ostream& os, WebServer const& ws);
