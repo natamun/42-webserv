@@ -1,6 +1,6 @@
 # webserv
 
-*This project has been created as part of the 42 curriculum by dufana, nmuari.*
+*This project has been created as part of the 42 curriculum by dufama, nmuari.*
 
 [![Build](https://github.com/natamun/42-webserv/actions/workflows/build.yml/badge.svg)](https://github.com/natamun/42-webserv/actions/workflows/build.yml)
 ![C++](https://img.shields.io/badge/language-C%2B%2B98-blue.svg)
