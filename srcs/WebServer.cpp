@@ -35,6 +35,8 @@
 #include "Router.hpp"
 #include "WebServerException.hpp"
 
+extern volatile sig_atomic_t g_run_webserv;
+
 WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
 {
     signal(SIGCHLD, SIG_IGN);
@@ -120,7 +122,7 @@ void WebServer::run()
 {
     _initPollFds();
 
-    while (true)
+    while (g_run_webserv)
     {
         if (poll(&_pollfds[0], _pollfds.size(), POLL_TIMEOUT_MS) == -1)
         {

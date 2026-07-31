@@ -10,6 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <csignal>
 #include <exception>
 #include <iostream>
 #include <vector>
@@ -18,17 +19,22 @@
 #include "Server.hpp"
 #include "WebServer.hpp"
 
+volatile sig_atomic_t g_run_webserv = 1;
+
+void handle_sigint(int sig)
+{
+    (void)sig;
+    std::cout << "Shutdow Server..... in progress!" << std::endl;
+    g_run_webserv = 0;
+}
+
 int main(int argc, char* argv[])
 {
-    if (argc != 2)
-    {
-        std::cerr << "Usage: " << argv[0] << " <config_file>" << std::endl;
-        return 1;
-    }
-
+    (void)argv;
+    (void)argc;
     try
     {
-        ConfigParser parser(argv[1]);
+        ConfigParser parser("default.conf");
         std::vector<Server> servers = parser.parse();
         WebServer server(servers);
         server.run();
