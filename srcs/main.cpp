@@ -30,11 +30,14 @@ void handle_sigint(int sig)
 
 int main(int argc, char* argv[])
 {
-    (void)argv;
-    (void)argc;
+    if (argc != 2)
+    {
+        std::cerr << "Usage: " << argv[0] << " <config_file>" << std::endl;
+        return 1;
+    }
     try
     {
-        ConfigParser parser("default.conf");
+        ConfigParser parser(argv[1]);
         std::vector<Server> servers = parser.parse();
         WebServer server(servers);
         server.run();
