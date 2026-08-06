@@ -6,11 +6,13 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/16 19:13:38 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/08/04 17:34:17 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "WebServer.hpp"
+
+extern volatile bool g_running;
 
 #include <fcntl.h>
 #include <netdb.h>
@@ -120,7 +122,7 @@ void WebServer::run()
 {
     _initPollFds();
 
-    while (true)
+    while (g_running)
     {
         if (poll(&_pollfds[0], _pollfds.size(), POLL_TIMEOUT_MS) == -1)
         {
