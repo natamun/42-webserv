@@ -100,7 +100,8 @@ WebServer::WebServer(std::vector<Server> const& servers) : _servers(servers)
                 "listen", _servers[i].host, _servers[i].port);
         }
 
-        if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
+        if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1 ||
+            fcntl(fd, F_SETFD, FD_CLOEXEC) == -1)
         {
             close(fd);
             _closeSockets();
@@ -283,7 +284,8 @@ void WebServer::_acceptClient(int listening_fd)
     _clients[client_fd] = client;
     std::cout << *client << " has been accepted" << std::endl;
 
-    if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
+    if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1 ||
+        fcntl(client_fd, F_SETFD, FD_CLOEXEC) == -1)
     {
         std::cerr << "[error] fcntl() failed: " << strerror(errno) << std::endl;
         _removeClient(client_fd);
