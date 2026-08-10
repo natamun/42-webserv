@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 01:19:56 by nmunari           #+#    #+#             */
-/*   Updated: 2026/08/04 17:34:17 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/08/10 12:48:41 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -410,7 +410,8 @@ void WebServer::_handleMethod(int client_fd,
     else if (method == "POST")
     {
         std::string body = request.getBody();
-        handlePost(path, body, *loc, response);
+        std::string contentType = request.getHeader("content-type");
+        handlePost(path, body, contentType, *loc, response);
     }
     else if (method == "DELETE")
         handleDelete(path, *loc, response);
