@@ -6,7 +6,7 @@
 /*   By: nmunari <nmunari@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 18:33:25 by nmunari           #+#    #+#             */
-/*   Updated: 2026/07/11 17:54:52 by nmunari          ###   ########.fr       */
+/*   Updated: 2026/08/10 12:48:45 by nmunari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ void handleGet(std::string const& path, Location const& loc, HttpResponse& res);
 
 void handlePost(std::string const& path,
                 std::string const& body,
+                std::string const& contentType,
                 Location const& loc,
                 HttpResponse& res);
 
