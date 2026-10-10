@@ -5,7 +5,7 @@
 [![Build](https://github.com/natamun/42-webserv/actions/workflows/build.yml/badge.svg)](https://github.com/natamun/42-webserv/actions/workflows/build.yml)
 ![C++](https://img.shields.io/badge/language-C%2B%2B98-blue.svg)
 
-HTTP/1.1 server written from scratch in C++98. A single `poll()` call drives every read and write between the server and its clients (listening sockets, connections, and CGI pipes included); no blocking I/O outside of regular disk files.
+HTTP/1.0 server written from scratch in C++98. A single `poll()` call drives every read and write between the server and its clients (listening sockets, connections, and CGI pipes included); no blocking I/O outside of regular disk files.
 
 ## Features
 
